@@ -5,17 +5,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FreeMediator.UnitTests;
 
-public class MediatorTests
+public class SenderTests
 {
-	private readonly IMediator _mediator;
+	private readonly ISender _sender;
 
-	public MediatorTests()
+	public SenderTests()
 	{
 		var services = new ServiceCollection();
-		services.AddMediator(config => { config.RegisterServicesFromAssemblyContaining<MediatorTests>(); });
+		services.AddMediator(config => { config.RegisterServicesFromAssemblyContaining<SenderTests>(); });
 
 		var serviceProvider = services.BuildServiceProvider();
-		_mediator = serviceProvider.GetRequiredService<IMediator>();
+		_sender = serviceProvider.GetRequiredService<ISender>();
 	}
 
 	[Fact]
@@ -25,7 +25,7 @@ public class MediatorTests
 		var request = new EchoRequest("Hello world");
 
 		// Act
-		var result = await _mediator.Send(request, TestContext.Current.CancellationToken);
+		var result = await _sender.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(request.Message, result);
@@ -38,7 +38,7 @@ public class MediatorTests
 		var request = new CommandRequest("Hello world");
 
 		// Act
-		await _mediator.Send(request, TestContext.Current.CancellationToken);
+		await _sender.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		var handledMessage = Assert.Single(CommandHandler.HandledMessages);

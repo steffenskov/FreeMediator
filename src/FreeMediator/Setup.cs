@@ -10,6 +10,7 @@ public static class Setup
 	public static void AddMediator(this IServiceCollection services, Action<MediatorConfiguration> configure)
 	{
 		services.TryAddTransient<IMediator, Mediator>();
+		services.TryAddTransient<ISender, Mediator>();
 
 		var configuration = new MediatorConfiguration(services);
 		configure(configuration);
