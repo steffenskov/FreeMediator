@@ -28,9 +28,7 @@ internal class Mediator : IMediator
 	{
 		ArgumentNullException.ThrowIfNull(request);
 
-		var handlerType = typeof(IRequestHandler<>).MakeGenericType(request.GetType());
-
-		var service = (IBaseRequestHandler)_serviceProvider.GetRequiredService(handlerType);
+		var service = _serviceProvider.GetRequiredService<IRequestHandler<TRequest>>();
 
 		await service.Handle(request, cancellationToken);
 	}
@@ -40,9 +38,7 @@ internal class Mediator : IMediator
 	{
 		ArgumentNullException.ThrowIfNull(notification);
 
-		var handlerType = typeof(INotificationHandler<>).MakeGenericType(notification.GetType());
-
-		var services = (IEnumerable<IBaseNotificationHandler>)_serviceProvider.GetServices(handlerType);
+		var services = _serviceProvider.GetServices<INotificationHandler<TNotification>>();
 
 		List<Exception> exceptions = [];
 

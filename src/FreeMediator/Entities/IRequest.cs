@@ -15,7 +15,7 @@ public interface IRequest : IBaseRequest
 }
 
 /// <summary>
-///     Base marker interface, only used internally.
+///     Base marker interface, only supposed to be used internally.
 /// </summary>
 public interface IBaseRequest
 {
