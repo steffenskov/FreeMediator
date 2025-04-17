@@ -1,5 +1,4 @@
 using FreeMediator.Configuration;
-using FreeMediator.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -11,6 +10,7 @@ public static class Setup
 	{
 		services.TryAddTransient<IMediator, Mediator>();
 		services.TryAddTransient<ISender, Mediator>();
+		services.TryAddTransient<IPublisher, Mediator>();
 
 		var configuration = new MediatorConfiguration(services);
 		configure(configuration);

@@ -1,7 +1,7 @@
 using FreeMediator.Handlers;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FreeMediator.Services;
+namespace FreeMediator;
 
 internal class Mediator : IMediator
 {
@@ -23,7 +23,8 @@ internal class Mediator : IMediator
 		return await service.Handle(request, cancellationToken);
 	}
 
-	public async Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest
+	public async Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
+		where TRequest : IRequest
 	{
 		ArgumentNullException.ThrowIfNull(request);
 
@@ -32,5 +33,34 @@ internal class Mediator : IMediator
 		var service = (IBaseRequestHandler)_serviceProvider.GetRequiredService(handlerType);
 
 		await service.Handle(request, cancellationToken);
+	}
+
+	public async Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+		where TNotification : INotification
+	{
+		ArgumentNullException.ThrowIfNull(notification);
+
+		var handlerType = typeof(INotificationHandler<>).MakeGenericType(notification.GetType());
+
+		var services = (IEnumerable<IBaseNotificationHandler>)_serviceProvider.GetServices(handlerType);
+
+		List<Exception> exceptions = [];
+
+		foreach (var service in services)
+		{
+			try
+			{
+				await service.Handle(notification, cancellationToken);
+			}
+			catch (Exception ex)
+			{
+				exceptions.Add(ex);
+			}
+		}
+
+		if (exceptions.Count > 0)
+		{
+			throw new AggregateException(exceptions);
+		}
 	}
 }

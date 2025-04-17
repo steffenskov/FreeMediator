@@ -1,5 +1,5 @@
-namespace FreeMediator.Services;
+namespace FreeMediator;
 
-public interface IMediator : ISender
+public interface IMediator : ISender, IPublisher
 {
 }

@@ -26,14 +26,15 @@ public class MediatorConfiguration
 
 	public void RegisterServicesFromAssemblyContaining(Assembly assembly)
 	{
-		foreach (var type in assembly.GetTypes())
+		var types = assembly.GetTypes();
+		foreach (var type in types)
 		{
-			if (!type.IsAssignableTo(typeof(IBaseRequestHandler)))
+			if (type.IsAbstract || type.IsInterface)
 			{
 				continue;
 			}
 
-			if (type.IsAbstract || type.IsInterface)
+			if (!type.IsAssignableTo(typeof(IBaseRequestHandler)) && !type.IsAssignableTo(typeof(IBaseNotificationHandler)))
 			{
 				continue;
 			}
@@ -45,17 +46,22 @@ public class MediatorConfiguration
 
 			var interfaces = type.GetInterfaces();
 
-			var implementedResponseInterface = interfaces.SingleOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
+			var implementedResponseInterface = interfaces.SingleOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IRequestHandler<,>)); // TODO: Support multiple implementations
 			if (implementedResponseInterface is not null)
 			{
 				_services.TryAddTransient(implementedResponseInterface, type);
-				continue;
 			}
 
-			var implementedNoResponseInterface = interfaces.SingleOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IRequestHandler<>));
+			var implementedNoResponseInterface = interfaces.SingleOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IRequestHandler<>)); // TODO: Support multiple implementations
 			if (implementedNoResponseInterface is not null)
 			{
 				_services.TryAddTransient(implementedNoResponseInterface, type);
+			}
+
+			var implementedNotificationInterface = interfaces.SingleOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(INotificationHandler<>)); // TODO: Support multiple implementations
+			if (implementedNotificationInterface is not null)
+			{
+				_services.AddTransientDistinctImplementation(implementedNotificationInterface, type);
 			}
 		}
 	}

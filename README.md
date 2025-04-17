@@ -11,6 +11,5 @@ by [Jimmy Bogard](https://github.com/jbogard).
 As such the first version only deals with the basic stuff (sending requests, returning responses), but here's what's to
 come:
 
-- Notification support
 - Pipeline behavior support
 - Streaming support

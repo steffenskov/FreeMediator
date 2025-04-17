@@ -1,5 +1,7 @@
 namespace FreeMediator.Handlers;
 
+#region With response
+
 public interface IRequestHandler<in TRequest, TResponse> : IBaseRequestHandler<TResponse>
 	where TRequest : IRequest<TResponse>
 {
@@ -11,6 +13,20 @@ public interface IRequestHandler<in TRequest, TResponse> : IBaseRequestHandler<T
 	Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken = default);
 }
 
+public interface IBaseRequestHandler<TResponse> : IBaseRequestHandler
+{
+	Task IBaseRequestHandler.Handle(IBaseRequest request, CancellationToken cancellationToken)
+	{
+		return Handle((IRequest<TResponse>)request, cancellationToken);
+	}
+
+	new Task<TResponse> Handle(IBaseRequest request, CancellationToken cancellationToken);
+}
+
+#endregion
+
+#region No response
+
 public interface IRequestHandler<in TRequest> : IBaseRequestHandler
 	where TRequest : IRequest
 {
@@ -20,4 +36,11 @@ public interface IRequestHandler<in TRequest> : IBaseRequestHandler
 	}
 
 	Task Handle(TRequest request, CancellationToken cancellationToken = default);
+}
+
+#endregion
+
+public interface IBaseRequestHandler
+{
+	Task Handle(IBaseRequest request, CancellationToken cancellationToken);
 }

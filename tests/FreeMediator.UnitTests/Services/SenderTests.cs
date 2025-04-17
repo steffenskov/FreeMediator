@@ -1,9 +1,7 @@
 using FreeMediator.Handlers;
-using FreeMediator.Requests;
-using FreeMediator.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FreeMediator.UnitTests;
+namespace FreeMediator.UnitTests.Services;
 
 public class SenderTests
 {
@@ -60,7 +58,7 @@ file record CommandRequest(string Message) : IRequest;
 
 file class CommandHandler : IRequestHandler<CommandRequest>
 {
-	public static readonly List<string> HandledMessages = [];
+	public static List<string> HandledMessages { get; } = [];
 
 	public Task Handle(CommandRequest request, CancellationToken cancellationToken = default)
 	{
