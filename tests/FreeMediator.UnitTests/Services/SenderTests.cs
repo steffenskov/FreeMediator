@@ -9,8 +9,12 @@ public class SenderTests
 	public SenderTests()
 	{
 		var services = new ServiceCollection();
-		services.AddMediator(config => { config.RegisterServicesFromAssemblyContaining<SenderTests>(); });
-
+		services.AddMediator(config =>
+		{
+			config.RegisterServicesFromAssemblyContaining<SenderTests>();
+			config.AddBehavior<FirstBehavior>();
+			config.AddBehavior<SecondBehavior>();
+		});
 		var serviceProvider = services.BuildServiceProvider();
 		_sender = serviceProvider.GetRequiredService<ISender>();
 	}
@@ -94,6 +98,20 @@ public class SenderTests
 		Assert.Equal(command.Message, handledCommand);
 		Assert.Equal(request.Message, secondResult);
 	}
+
+	[Fact]
+	public async Task Send_WithTwoBehaviors_InvokedInCorrectOrder()
+	{
+		// Arrange
+		var request = new RequestWithBehavior("Hello world");
+
+		// Act
+		await _sender.Send(request, TestContext.Current.CancellationToken);
+
+		// Assert
+		Assert.Equal(42, request.FirstBehaviorProperty);
+		Assert.Equal(43, request.SecondBehaviorProperty);
+	}
 }
 
 file record EchoRequest(string Message) : IRequest<string>;
@@ -112,10 +130,10 @@ file class CommandHandler : IRequestHandler<CommandRequest>
 {
 	public static List<string> HandledMessages { get; } = [];
 
-	public Task Handle(CommandRequest request, CancellationToken cancellationToken = default)
+	public Task<Unit> Handle(CommandRequest request, CancellationToken cancellationToken = default)
 	{
 		HandledMessages.Add(request.Message);
-		return Task.CompletedTask;
+		return Unit.Task;
 	}
 }
 
@@ -127,16 +145,16 @@ file class MultiCommandHandler : IRequestHandler<FirstMultiCommand>, IRequestHan
 {
 	public static List<string> HandledMessages { get; } = [];
 
-	public Task Handle(FirstMultiCommand command, CancellationToken cancellationToken = default)
+	public Task<Unit> Handle(FirstMultiCommand command, CancellationToken cancellationToken = default)
 	{
 		HandledMessages.Add(command.Message);
-		return Task.CompletedTask;
+		return Unit.Task;
 	}
 
-	public Task Handle(SecondMultiCommand command, CancellationToken cancellationToken = default)
+	public Task<Unit> Handle(SecondMultiCommand command, CancellationToken cancellationToken = default)
 	{
 		HandledMessages.Add(command.Message);
-		return Task.CompletedTask;
+		return Unit.Task;
 	}
 }
 
@@ -165,14 +183,46 @@ file class MixedRequestHandler : IRequestHandler<MixedCommand>, IRequestHandler<
 {
 	public static List<string> HandledMessages { get; } = [];
 
-	public Task Handle(MixedCommand request, CancellationToken cancellationToken = default)
+	public Task<Unit> Handle(MixedCommand request, CancellationToken cancellationToken = default)
 	{
 		HandledMessages.Add(request.Message);
-		return Task.CompletedTask;
+		return Unit.Task;
 	}
 
 	public Task<string> Handle(MixedRequest request, CancellationToken cancellationToken = default)
 	{
 		return Task.FromResult(request.Message);
+	}
+}
+
+file record RequestWithBehavior(string Message) : IRequest
+{
+	public int FirstBehaviorProperty { get; set; }
+	public int SecondBehaviorProperty { get; set; }
+}
+
+file class RequestWithBehaviorHandler : IRequestHandler<RequestWithBehavior>
+{
+	public Task<Unit> Handle(RequestWithBehavior request, CancellationToken cancellationToken = default)
+	{
+		return Unit.Task;
+	}
+}
+
+file class FirstBehavior : IPipelineBehavior<RequestWithBehavior, Unit>
+{
+	public Task<Unit> Handle(RequestWithBehavior request, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
+	{
+		request.FirstBehaviorProperty = 42;
+		return next(cancellationToken);
+	}
+}
+
+file class SecondBehavior : IPipelineBehavior<RequestWithBehavior, Unit>
+{
+	public Task<Unit> Handle(RequestWithBehavior request, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
+	{
+		request.SecondBehaviorProperty = request.FirstBehaviorProperty + 1;
+		return next(cancellationToken);
 	}
 }

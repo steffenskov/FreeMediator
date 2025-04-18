@@ -14,10 +14,9 @@ internal class Mediator : IMediator
 		ArgumentNullException.ThrowIfNull(request);
 
 		var handlerType = typeof(IRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResponse));
-
 		var service = (IBaseRequestHandler<TResponse>)_serviceProvider.GetRequiredService(handlerType);
 
-		return await service.Handle(request, cancellationToken);
+		return await InvokePipelineAsync(request, t => service.Handle(request, t), cancellationToken);
 	}
 
 	public async Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
@@ -27,7 +26,7 @@ internal class Mediator : IMediator
 
 		var service = _serviceProvider.GetRequiredService<IRequestHandler<TRequest>>();
 
-		await service.Handle(request, cancellationToken);
+		await InvokePipelineAsync(request, t => service.Handle(request, t), cancellationToken);
 	}
 
 	public async Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
@@ -55,5 +54,17 @@ internal class Mediator : IMediator
 		{
 			throw new AggregateException(exceptions);
 		}
+	}
+
+	private async Task<TResponse> InvokePipelineAsync<TResponse>(IBaseRequest request, RequestHandlerDelegate<TResponse> serviceHandler, CancellationToken cancellationToken)
+	{
+		var pipelineBehaviorType = typeof(IPipelineBehavior<,>).MakeGenericType(request.GetType(), typeof(TResponse));
+		var behaviors = _serviceProvider.GetServices(pipelineBehaviorType).Cast<IBasePipelineBehavior<TResponse>>();
+
+		var pipeline = behaviors
+			.Reverse() // necessary to archive in-DI-order execution, due to the way they're piped together
+			.Aggregate(serviceHandler, (next, pipeline) => t => pipeline.Handle(request, next, t));
+
+		return await pipeline(cancellationToken);
 	}
 }

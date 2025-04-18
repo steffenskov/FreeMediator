@@ -9,17 +9,19 @@ public class MediatorConfiguration
 		_services = services;
 	}
 
-	public void RegisterServicesFromAssemblyContaining<T>()
+	#region RegisterServicesFromAssemblyContaining
+
+	public MediatorConfiguration RegisterServicesFromAssemblyContaining<T>()
 	{
-		RegisterServicesFromAssemblyContaining(typeof(T));
+		return RegisterServicesFromAssemblyContaining(typeof(T));
 	}
 
-	public void RegisterServicesFromAssemblyContaining(Type markerType)
+	public MediatorConfiguration RegisterServicesFromAssemblyContaining(Type markerType)
 	{
-		RegisterServicesFromAssemblyContaining(markerType.Assembly);
+		return RegisterServicesFromAssemblyContaining(markerType.Assembly);
 	}
 
-	public void RegisterServicesFromAssemblyContaining(Assembly assembly)
+	public MediatorConfiguration RegisterServicesFromAssemblyContaining(Assembly assembly)
 	{
 		var types = assembly.GetTypes();
 		foreach (var type in types)
@@ -59,5 +61,38 @@ public class MediatorConfiguration
 				_services.AddTransientDistinctImplementation(implementedNotificationInterface, type);
 			}
 		}
+
+		return this;
 	}
+
+	#endregion
+
+	#region AddBehavior
+
+	public MediatorConfiguration AddBehavior<TBehavior>(ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
+		where TBehavior : IBasePipelineBehavior
+	{
+		return AddBehavior(typeof(TBehavior), serviceLifetime);
+	}
+
+	public MediatorConfiguration AddBehavior(Type implementationType, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
+	{
+		var implementedInterfaces = implementationType.GetInterfaces()
+			.Where(interfaceType => interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>))
+			.ToList();
+
+		if (implementedInterfaces.Count == 0)
+		{
+			throw new InvalidOperationException($"{implementationType.Name} must implement {typeof(IPipelineBehavior<,>).FullName}");
+		}
+
+		foreach (var implementedInterface in implementedInterfaces)
+		{
+			_services.Add(ServiceDescriptor.Describe(implementedInterface, implementationType, serviceLifetime));
+		}
+
+		return this;
+	}
+
+	#endregion
 }

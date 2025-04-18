@@ -22,7 +22,7 @@ public interface IRequestHandler<in TRequest, TResponse> : IBaseRequestHandler<T
 public interface IRequestHandler<in TRequest> : IBaseRequestHandler
 	where TRequest : IRequest
 {
-	Task Handle(TRequest request, CancellationToken cancellationToken = default);
+	Task<Unit> Handle(TRequest request, CancellationToken cancellationToken = default);
 }
 
 #endregion
