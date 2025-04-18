@@ -9,7 +9,78 @@ public class MediatorConfiguration
 		_services = services;
 	}
 
-	#region RegisterServicesFromAssemblyContaining
+	#region AddOpenBehavior
+
+	public MediatorConfiguration AddOpenBehavior(Type implementationType, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
+	{
+		if (!implementationType.IsGenericType)
+		{
+			throw new ArgumentException($"{nameof(implementationType)} must be a generic type", nameof(implementationType));
+		}
+
+		var implementedInterfaces = implementationType.GetInterfaces()
+			.Where(interfaceType => interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>))
+			.ToHashSet();
+
+		if (implementedInterfaces.Count == 0)
+		{
+			throw new ArgumentException($"{implementationType.Name} must implement {typeof(IPipelineBehavior<,>).FullName}", nameof(implementationType));
+		}
+
+		foreach (var implementedInterface in implementedInterfaces)
+		{
+			_services.Add(new ServiceDescriptor(implementedInterface, implementationType, serviceLifetime));
+		}
+
+		return this;
+	}
+
+	public MediatorConfiguration AddOpenBehaviors(IEnumerable<Type> openBehaviorTypes, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
+	{
+		foreach (var openBehaviorType in openBehaviorTypes)
+		{
+			AddOpenBehavior(openBehaviorType, serviceLifetime);
+		}
+
+		return this;
+	}
+
+	#endregion
+
+	#region AddBehavior
+
+	public MediatorConfiguration AddBehavior<TBehavior>(ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
+		where TBehavior : IBasePipelineBehavior
+	{
+		return AddBehavior(typeof(TBehavior), serviceLifetime);
+	}
+
+	public MediatorConfiguration AddBehavior(Type implementationType, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
+	{
+		if (implementationType.IsGenericType)
+		{
+			throw new ArgumentException($"{nameof(implementationType)} cannot be a generic type", nameof(implementationType));
+		}
+
+		var implementedInterfaces = implementationType.GetInterfaces()
+			.Where(interfaceType => interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>)).ToHashSet();
+
+		if (implementedInterfaces.Count == 0)
+		{
+			throw new ArgumentException($"{implementationType.Name} must implement {typeof(IPipelineBehavior<,>).FullName}", nameof(implementationType));
+		}
+
+		foreach (var implementedInterface in implementedInterfaces)
+		{
+			_services.Add(new ServiceDescriptor(implementedInterface, implementationType, serviceLifetime));
+		}
+
+		return this;
+	}
+
+	#endregion
+
+	#region RegisterServices
 
 	public MediatorConfiguration RegisterServicesFromAssemblyContaining<T>()
 	{
@@ -18,10 +89,10 @@ public class MediatorConfiguration
 
 	public MediatorConfiguration RegisterServicesFromAssemblyContaining(Type markerType)
 	{
-		return RegisterServicesFromAssemblyContaining(markerType.Assembly);
+		return RegisterServicesFromAssembly(markerType.Assembly);
 	}
 
-	public MediatorConfiguration RegisterServicesFromAssemblyContaining(Assembly assembly)
+	public MediatorConfiguration RegisterServicesFromAssembly(Assembly assembly)
 	{
 		var types = assembly.GetTypes();
 		foreach (var type in types)
@@ -65,30 +136,11 @@ public class MediatorConfiguration
 		return this;
 	}
 
-	#endregion
-
-	#region AddBehavior
-
-	public MediatorConfiguration AddBehavior<TBehavior>(ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
-		where TBehavior : IBasePipelineBehavior
+	public MediatorConfiguration RegisterServicesFromAssemblies(params IEnumerable<Assembly> assemblies)
 	{
-		return AddBehavior(typeof(TBehavior), serviceLifetime);
-	}
-
-	public MediatorConfiguration AddBehavior(Type implementationType, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
-	{
-		var implementedInterfaces = implementationType.GetInterfaces()
-			.Where(interfaceType => interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>))
-			.ToList();
-
-		if (implementedInterfaces.Count == 0)
+		foreach (var assembly in assemblies)
 		{
-			throw new InvalidOperationException($"{implementationType.Name} must implement {typeof(IPipelineBehavior<,>).FullName}");
-		}
-
-		foreach (var implementedInterface in implementedInterfaces)
-		{
-			_services.Add(ServiceDescriptor.Describe(implementedInterface, implementationType, serviceLifetime));
+			RegisterServicesFromAssembly(assembly);
 		}
 
 		return this;
