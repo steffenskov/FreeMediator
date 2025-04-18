@@ -1,8 +1,3 @@
-using System.Reflection;
-using FreeMediator.Handlers;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-
 namespace FreeMediator.Configuration;
 
 public class MediatorConfiguration
@@ -47,13 +42,13 @@ public class MediatorConfiguration
 			var interfaces = type.GetInterfaces();
 
 			var implementedResponseInterfaces = interfaces.Where(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
-			foreach(var implementedResponseInterface in implementedResponseInterfaces)
+			foreach (var implementedResponseInterface in implementedResponseInterfaces)
 			{
 				_services.TryAddTransient(implementedResponseInterface, type);
 			}
 
 			var implementedNoResponseInterfaces = interfaces.Where(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IRequestHandler<>));
-			foreach(var implementedNoResponseInterface in implementedNoResponseInterfaces)
+			foreach (var implementedNoResponseInterface in implementedNoResponseInterfaces)
 			{
 				_services.TryAddTransient(implementedNoResponseInterface, type);
 			}

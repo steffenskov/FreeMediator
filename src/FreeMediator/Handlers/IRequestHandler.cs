@@ -1,6 +1,5 @@
-using FreeMediator.Handlers;
-
 // ReSharper disable once CheckNamespace
+
 namespace FreeMediator;
 
 #region With response

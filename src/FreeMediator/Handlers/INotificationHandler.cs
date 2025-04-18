@@ -1,6 +1,5 @@
-using FreeMediator.Handlers;
-
 // ReSharper disable once CheckNamespace
+
 namespace FreeMediator;
 
 public interface INotificationHandler<in TNotification> : IBaseNotificationHandler

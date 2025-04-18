@@ -1,6 +1,3 @@
-using FreeMediator.Handlers;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace FreeMediator;
 
 internal class Mediator : IMediator

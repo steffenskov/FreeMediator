@@ -1,4 +1,3 @@
-using FreeMediator.Handlers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FreeMediator.UnitTests.Services;
