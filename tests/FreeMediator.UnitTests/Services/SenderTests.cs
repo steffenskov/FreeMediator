@@ -19,7 +19,7 @@ public class SenderTests
 		var request = new EchoRequest($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		var result = await _sender.Send(request, TestContext.Current.CancellationToken);
+		var result = await _sender.Send(request);
 
 		// Assert
 		Assert.Equal(request.Message, result);
@@ -32,7 +32,7 @@ public class SenderTests
 		var request = new CommandRequest($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		await _sender.Send(request, TestContext.Current.CancellationToken);
+		await _sender.Send(request);
 
 		// Assert
 		var handledMessage = Assert.Single(CommandHandler.HandledMessages);
@@ -47,8 +47,8 @@ public class SenderTests
 		var secondCommand = new SecondMultiCommand($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		await _sender.Send(firstCommand, TestContext.Current.CancellationToken);
-		await _sender.Send(secondCommand, TestContext.Current.CancellationToken);
+		await _sender.Send(firstCommand);
+		await _sender.Send(secondCommand);
 
 		// Assert
 		Assert.Equal(2, MultiCommandHandler.HandledMessages.Count);
@@ -67,8 +67,8 @@ public class SenderTests
 		var secondRequest = new SecondMultiRequestWithResponse(Random.Shared.Next());
 
 		// Act
-		var firstResult = await _sender.Send(firstRequest, TestContext.Current.CancellationToken);
-		var secondResult = await _sender.Send(secondRequest, TestContext.Current.CancellationToken);
+		var firstResult = await _sender.Send(firstRequest);
+		var secondResult = await _sender.Send(secondRequest);
 
 		// Assert
 		Assert.Equal(firstRequest.Message, firstResult);
@@ -83,8 +83,8 @@ public class SenderTests
 		var request = new MixedRequest($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		await _sender.Send(command, TestContext.Current.CancellationToken);
-		var secondResult = await _sender.Send(request, TestContext.Current.CancellationToken);
+		await _sender.Send(command);
+		var secondResult = await _sender.Send(request);
 
 		// Assert
 		var handledCommand = Assert.Single(MixedRequestHandler.HandledMessages);
@@ -100,8 +100,8 @@ public class SenderTests
 		var stringRequest = new GenericEchoRequest<string>($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		var intResult = await _sender.Send(intRequest, TestContext.Current.CancellationToken);
-		var stringResult = await _sender.Send(stringRequest, TestContext.Current.CancellationToken);
+		var intResult = await _sender.Send(intRequest);
+		var stringResult = await _sender.Send(stringRequest);
 
 		// Assert
 		Assert.Equal(intRequest.Value, intResult);

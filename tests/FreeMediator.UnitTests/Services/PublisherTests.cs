@@ -20,7 +20,7 @@ public class PublisherTests
 		var notification = new MultiRecipientNotification($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		await _publisher.Publish(notification, TestContext.Current.CancellationToken);
+		await _publisher.Publish(notification);
 
 		// Assert
 		var firstHandledMessage = Assert.Single(FirstMultiRecipientHandler.HandledMessages);
@@ -53,7 +53,7 @@ public class PublisherTests
 		var notification = new MultiRecipientNotification($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		await publisher.Publish(notification, TestContext.Current.CancellationToken);
+		await publisher.Publish(notification);
 
 		// Assert
 		var firstHandledMessage = Assert.Single(FirstMultiRecipientHandler.HandledMessages);
@@ -76,7 +76,7 @@ public class PublisherTests
 		var notification = new NoRecipientNotification($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		var ex = await Record.ExceptionAsync(async () => await _publisher.Publish(notification, TestContext.Current.CancellationToken));
+		var ex = await Record.ExceptionAsync(async () => await _publisher.Publish(notification));
 
 		// Assert
 		Assert.Null(ex);
@@ -89,7 +89,7 @@ public class PublisherTests
 		var notification = new MultiRecipientWithExceptionNotification($"Hello world {Random.Shared.Next()}");
 
 		// Act && Assert
-		var ex = await Assert.ThrowsAsync<AggregateException>(async () => await _publisher.Publish(notification, TestContext.Current.CancellationToken));
+		var ex = await Assert.ThrowsAsync<AggregateException>(async () => await _publisher.Publish(notification));
 
 		var innerEx = Assert.Single(ex.InnerExceptions);
 		var handledMessage = Assert.Single(WorkingMultiRecipientHandler.HandledMessages);
@@ -112,8 +112,8 @@ public class PublisherTests
 		var stringNotification = new GenericNotification<string>($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		await _publisher.Publish(intNotification, TestContext.Current.CancellationToken);
-		await _publisher.Publish(stringNotification, TestContext.Current.CancellationToken);
+		await _publisher.Publish(intNotification);
+		await _publisher.Publish(stringNotification);
 
 		// Assert
 		var intMessage = Assert.Single(GenericNotificationHandler<GenericNotification<int>>.HandledMessages);

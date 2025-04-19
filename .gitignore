@@ -55,3 +55,4 @@ nunit-*.xml
 
 .idea
 *.DotSettings.user
+coverage-report

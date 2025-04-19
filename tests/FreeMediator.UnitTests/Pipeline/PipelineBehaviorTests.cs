@@ -26,7 +26,7 @@ public class PipelineBehaviorTests
 		var request = new RequestWithBehavior("Hello world");
 
 		// Act
-		await _sender.Send(request, TestContext.Current.CancellationToken);
+		await _sender.Send(request);
 
 		// Assert
 		Assert.Equal(42, request.FirstBehaviorProperty);
@@ -40,7 +40,7 @@ public class PipelineBehaviorTests
 		var request = new RequestWithOpenBehavior("Hello world");
 
 		// Act
-		await _sender.Send(request, TestContext.Current.CancellationToken);
+		await _sender.Send(request);
 
 		// Assert
 		Assert.Equal(42, request.BehaviorProperty);
