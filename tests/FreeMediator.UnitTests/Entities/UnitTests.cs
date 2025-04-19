@@ -14,7 +14,7 @@ public class UnitTests
 	}
 
 	[Fact]
-	public void Unit_Task_ReturnsCompletedTask()
+	public async Task Unit_Task_ReturnsCompletedTask()
 	{
 		// Act
 		var unitTask = Unit.Task;
@@ -22,7 +22,7 @@ public class UnitTests
 		// Assert
 		Assert.NotNull(unitTask);
 		Assert.True(unitTask.IsCompletedSuccessfully);
-		Assert.Equal(default, unitTask.Result);
+		Assert.Equal(default, await unitTask);
 	}
 
 	[Fact]
