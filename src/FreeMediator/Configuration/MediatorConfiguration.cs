@@ -13,24 +13,25 @@ public class MediatorConfiguration
 
 	public MediatorConfiguration AddOpenBehavior(Type implementationType, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
 	{
-		if (!implementationType.IsGenericType)
+		if (!implementationType.IsGenericType || !implementationType.IsGenericTypeDefinition)
 		{
-			throw new ArgumentException($"{nameof(implementationType)} must be a generic type", nameof(implementationType));
+			throw new ArgumentException($"{nameof(implementationType)} must be a generic type definition", nameof(implementationType));
 		}
 
-		var implementedInterfaces = implementationType.GetInterfaces()
-			.Where(interfaceType => interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>))
-			.ToHashSet();
+		if (implementationType.GetGenericArguments().Length != 2)
+		{
+			throw new ArgumentException($"{nameof(implementationType)} must take 2 type arguments matching IPipelineBehavior<,>", nameof(implementationType));
+		}
 
-		if (implementedInterfaces.Count == 0)
+		var implementsPipeline = implementationType.GetInterfaces()
+			.Any(interfaceType => interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>));
+
+		if (!implementsPipeline)
 		{
 			throw new ArgumentException($"{implementationType.Name} must implement {typeof(IPipelineBehavior<,>).FullName}", nameof(implementationType));
 		}
 
-		foreach (var implementedInterface in implementedInterfaces)
-		{
-			_services.Add(new ServiceDescriptor(implementedInterface, implementationType, serviceLifetime));
-		}
+		_services.Add(new ServiceDescriptor(typeof(IPipelineBehavior<,>), implementationType, serviceLifetime));
 
 		return this;
 	}
