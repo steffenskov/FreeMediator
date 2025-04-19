@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace FreeMediator.Configuration;
 
 public class MediatorConfiguration
@@ -93,6 +95,16 @@ public class MediatorConfiguration
 		return RegisterServicesFromAssembly(markerType.Assembly);
 	}
 
+	public MediatorConfiguration RegisterServicesFromAssemblies(params IEnumerable<Assembly> assemblies)
+	{
+		foreach (var assembly in assemblies)
+		{
+			RegisterServicesFromAssembly(assembly);
+		}
+
+		return this;
+	}
+
 	public MediatorConfiguration RegisterServicesFromAssembly(Assembly assembly)
 	{
 		var types = assembly.GetTypes();
@@ -108,43 +120,71 @@ public class MediatorConfiguration
 				continue;
 			}
 
-			if (type.IsGenericType)
-			{
-				throw new NotSupportedException("Generic handlers are not supported atm.");
-			}
-
 			var interfaces = type.GetInterfaces();
 
-			var implementedResponseInterfaces = interfaces.Where(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
-			foreach (var implementedResponseInterface in implementedResponseInterfaces)
+			if (type.IsGenericType)
 			{
-				_services.TryAddTransient(implementedResponseInterface, type);
+				if (type.IsAssignableTo(typeof(IBaseRequestHandler)))
+				{
+					RegisterGenericRequestHandler(type);
+				}
+				else // Must be notification
+				{
+					RegisterGenericNotificationHandler(type);
+				}
 			}
 
-			var implementedNoResponseInterfaces = interfaces.Where(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IRequestHandler<>));
-			foreach (var implementedNoResponseInterface in implementedNoResponseInterfaces)
+			else
 			{
-				_services.TryAddTransient(implementedNoResponseInterface, type);
-			}
+				var implementedResponseInterfaces = interfaces.Where(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IRequestHandler<,>));
+				foreach (var implementedResponseInterface in implementedResponseInterfaces)
+				{
+					_services.TryAddTransient(implementedResponseInterface, type);
+				}
 
-			var implementedNotificationInterfaces = interfaces.Where(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(INotificationHandler<>));
-			foreach (var implementedNotificationInterface in implementedNotificationInterfaces)
-			{
-				_services.AddTransientDistinctImplementation(implementedNotificationInterface, type);
+				var implementedNoResponseInterfaces = interfaces.Where(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IRequestHandler<>));
+				foreach (var implementedNoResponseInterface in implementedNoResponseInterfaces)
+				{
+					_services.TryAddTransient(implementedNoResponseInterface, type);
+				}
+
+				var implementedNotificationInterfaces = interfaces.Where(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(INotificationHandler<>));
+				foreach (var implementedNotificationInterface in implementedNotificationInterfaces)
+				{
+					_services.AddTransientDistinctImplementation(implementedNotificationInterface, type);
+				}
 			}
 		}
 
 		return this;
 	}
 
-	public MediatorConfiguration RegisterServicesFromAssemblies(params IEnumerable<Assembly> assemblies)
+	private void RegisterGenericRequestHandler(Type type)
 	{
-		foreach (var assembly in assemblies)
+		var genericArgumentTypeCount = type.GetGenericArguments().Length;
+		switch (genericArgumentTypeCount)
 		{
-			RegisterServicesFromAssembly(assembly);
+			case 0: throw new UnreachableException($"Generic type must have at least one argument: {type.FullName}");
+			case 1: // TODO: Wrap in handler with 2 args
+				throw new NotImplementedException($"Generic request handlers with a single generic type argument is not yet supported: {type.FullName}");
+			case 2:
+				_services.TryAddTransient(typeof(IRequestHandler<,>), type);
+				break;
+			default: throw new NotSupportedException($"Generic request handlers with more than 2 generic type arguments are not supported: {type.FullName}");
 		}
+	}
 
-		return this;
+	private void RegisterGenericNotificationHandler(Type type)
+	{
+		var genericArgumentTypeCount = type.GetGenericArguments().Length;
+		switch (genericArgumentTypeCount)
+		{
+			case 0: throw new UnreachableException($"Generic type must have at least one argument: {type.FullName}");
+			case 1:
+				_services.TryAddTransient(typeof(INotificationHandler<>), type);
+				break;
+			default: throw new NotSupportedException($"Generic notification handlers with more than 1 generic type arguments are not supported: {type.FullName}");
+		}
 	}
 
 	#endregion

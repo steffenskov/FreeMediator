@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 namespace FreeMediator.UnitTests.Services;
 
 public class PublisherTests
@@ -105,6 +103,25 @@ public class PublisherTests
 		SecondMultiRecipientHandler.HandledMessages.Clear();
 		MultipleImplementationsHandler.HandledMessages.Clear();
 	}
+
+	[Fact]
+	public async Task Publish_GenericRequest_IsHandled()
+	{
+		// Arrange
+		var intNotification = new GenericNotification<int>(42);
+		var stringNotification = new GenericNotification<string>($"Hello world {Random.Shared.Next()}");
+
+		// Act
+		await _publisher.Publish(intNotification, TestContext.Current.CancellationToken);
+		await _publisher.Publish(stringNotification, TestContext.Current.CancellationToken);
+
+		// Assert
+		var intMessage = Assert.Single(GenericNotificationHandler<GenericNotification<int>>.HandledMessages);
+		var stringMessage = Assert.Single(GenericNotificationHandler<GenericNotification<string>>.HandledMessages);
+
+		Assert.Equal(intNotification.Value, intMessage);
+		Assert.Equal(stringNotification.Value, stringMessage);
+	}
 }
 
 file record MultiRecipientNotification(string Message) : INotification;
@@ -167,6 +184,28 @@ file class MultipleImplementationsHandler : INotificationHandler<MultiRecipientN
 	public Task Handle(MultiRecipientWithExceptionNotification notification, CancellationToken cancellationToken)
 	{
 		HandledMessages.Add(notification.Message);
+		return Task.CompletedTask;
+	}
+}
+
+file record GenericNotification<T>(T Value) : IGenericNotification
+{
+	object? IGenericNotification.Value => Value;
+}
+
+file interface IGenericNotification : INotification
+{
+	object? Value { get; }
+}
+
+file class GenericNotificationHandler<TNotification> : INotificationHandler<TNotification>
+	where TNotification : IGenericNotification
+{
+	public static List<object?> HandledMessages { get; } = [];
+
+	public Task Handle(TNotification notification, CancellationToken cancellationToken = default)
+	{
+		HandledMessages.Add(notification.Value);
 		return Task.CompletedTask;
 	}
 }

@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 namespace FreeMediator.UnitTests.Services;
 
 public class SenderTests
@@ -9,13 +7,7 @@ public class SenderTests
 	public SenderTests()
 	{
 		var services = new ServiceCollection();
-		services.AddMediator(config =>
-		{
-			config.RegisterServicesFromAssemblyContaining<SenderTests>();
-			config.AddBehavior<FirstBehavior>();
-			config.AddBehavior<SecondBehavior>();
-			config.AddOpenBehavior(typeof(OpenBehavior<,>));
-		});
+		services.AddMediator(config => { config.RegisterServicesFromAssemblyContaining<SenderTests>(); });
 		var serviceProvider = services.BuildServiceProvider();
 		_sender = serviceProvider.GetRequiredService<ISender>();
 	}
@@ -101,30 +93,19 @@ public class SenderTests
 	}
 
 	[Fact]
-	public async Task Send_WithTwoBehaviors_BehaviorsInvokedInCorrectOrder()
+	public async Task Send_GenericRequest_IsHandled()
 	{
 		// Arrange
-		var request = new RequestWithBehavior("Hello world");
+		var intRequest = new GenericEchoRequest<int>(42);
+		var stringRequest = new GenericEchoRequest<string>($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		await _sender.Send(request, TestContext.Current.CancellationToken);
+		var intResult = await _sender.Send(intRequest, TestContext.Current.CancellationToken);
+		var stringResult = await _sender.Send(stringRequest, TestContext.Current.CancellationToken);
 
 		// Assert
-		Assert.Equal(42, request.FirstBehaviorProperty);
-		Assert.Equal(43, request.SecondBehaviorProperty);
-	}
-
-	[Fact]
-	public async Task Send_WithOpenBehavior_BehaviorInvoked()
-	{
-		// Arrange
-		var request = new RequestWithOpenBehavior("Hello world");
-
-		// Act
-		await _sender.Send(request, TestContext.Current.CancellationToken);
-
-		// Assert
-		Assert.Equal(42, request.BehaviorProperty);
+		Assert.Equal(intRequest.Value, intResult);
+		Assert.Equal(stringRequest.Value, stringResult);
 	}
 }
 
@@ -209,62 +190,13 @@ file class MixedRequestHandler : IRequestHandler<MixedCommand>, IRequestHandler<
 	}
 }
 
-file record RequestWithBehavior(string Message) : IRequest
-{
-	public int FirstBehaviorProperty { get; set; }
-	public int SecondBehaviorProperty { get; set; }
-}
+file record GenericEchoRequest<T>(T Value) : IRequest<T>;
 
-file class RequestWithBehaviorHandler : IRequestHandler<RequestWithBehavior>
+file class GenericEchoRequestHandler<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
+	where TRequest : GenericEchoRequest<TResponse>
 {
-	public Task<Unit> Handle(RequestWithBehavior request, CancellationToken cancellationToken = default)
+	public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
 	{
-		return Unit.Task;
-	}
-}
-
-file class FirstBehavior : IPipelineBehavior<RequestWithBehavior, Unit>
-{
-	public Task<Unit> Handle(RequestWithBehavior request, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
-	{
-		request.FirstBehaviorProperty = 42;
-		return next(cancellationToken);
-	}
-}
-
-file class SecondBehavior : IPipelineBehavior<RequestWithBehavior, Unit>
-{
-	public Task<Unit> Handle(RequestWithBehavior request, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
-	{
-		request.SecondBehaviorProperty = request.FirstBehaviorProperty + 1;
-		return next(cancellationToken);
-	}
-}
-
-file record RequestWithOpenBehavior(string Message) : IRequest, IRequestWithProperty
-{
-	public int BehaviorProperty { get; set; }
-}
-
-file class RequestWithOpenBehaviorHandler : IRequestHandler<RequestWithOpenBehavior>
-{
-	public Task<Unit> Handle(RequestWithOpenBehavior request, CancellationToken cancellationToken = default)
-	{
-		return Unit.Task;
-	}
-}
-
-file interface IRequestWithProperty
-{
-	int BehaviorProperty { get; set; }
-}
-
-file class OpenBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-	where TRequest : IRequest, IRequestWithProperty
-{
-	public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
-	{
-		request.BehaviorProperty = 42;
-		return next(cancellationToken);
+		return Task.FromResult(request.Value);
 	}
 }

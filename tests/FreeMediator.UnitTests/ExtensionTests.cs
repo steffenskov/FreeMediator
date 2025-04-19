@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 namespace FreeMediator.UnitTests;
 
 public class ExtensionTests
