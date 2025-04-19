@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace FreeMediator.Configuration;
 
 public class MediatorConfiguration
@@ -188,39 +186,11 @@ public class MediatorConfiguration
 	{
 		if (type.IsAssignableTo(typeof(IBaseRequestHandler)))
 		{
-			RegisterGenericRequestHandler(type);
+			_services.RegisterGenericRequestHandler(type);
 		}
 		else // Must be notification
 		{
-			RegisterGenericNotificationHandler(type);
-		}
-	}
-
-	private void RegisterGenericRequestHandler(Type type)
-	{
-		var genericArgumentTypeCount = type.GetGenericArguments().Length;
-		switch (genericArgumentTypeCount)
-		{
-			case 0: throw new UnreachableException($"Generic type must have at least one argument: {type.Name}");
-			case 1: // TODO: Wrap in handler with 2 args
-				throw new NotImplementedException($"Generic request handlers with a single generic type argument is not yet supported: {type.Name}");
-			case 2:
-				_services.AddDistinctImplementation(typeof(IRequestHandler<,>), type);
-				break;
-			default: throw new NotSupportedException($"Generic request handlers with more than 2 generic type arguments are not supported: {type.Name}");
-		}
-	}
-
-	private void RegisterGenericNotificationHandler(Type type)
-	{
-		var genericArgumentTypeCount = type.GetGenericArguments().Length;
-		switch (genericArgumentTypeCount)
-		{
-			case 0: throw new UnreachableException($"Generic type must have at least one argument: {type.Name}");
-			case 1:
-				_services.AddDistinctImplementation(typeof(INotificationHandler<>), type);
-				break;
-			default: throw new NotSupportedException($"Generic notification handlers with more than 1 generic type arguments are not supported: {type.Name}");
+			_services.RegisterGenericNotificationHandler(type);
 		}
 	}
 

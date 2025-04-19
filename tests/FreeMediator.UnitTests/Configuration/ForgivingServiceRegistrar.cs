@@ -40,6 +40,28 @@ internal class ForgivingServiceRegistrar : IServiceRegistrar
 		_services.Add(descriptor);
 	}
 
+	public void RegisterGenericRequestHandler(Type type)
+	{
+		var genericArgumentTypeCount = type.GetGenericArguments().Length;
+		switch (genericArgumentTypeCount)
+		{
+			case 2:
+				AddDistinctImplementation(typeof(IRequestHandler<,>), type);
+				break;
+		}
+	}
+
+	public void RegisterGenericNotificationHandler(Type type)
+	{
+		var genericArgumentTypeCount = type.GetGenericArguments().Length;
+		switch (genericArgumentTypeCount)
+		{
+			case 1:
+				AddDistinctImplementation(typeof(INotificationHandler<>), type);
+				break;
+		}
+	}
+
 	public IEnumerator<ServiceDescriptor> GetEnumerator()
 	{
 		return _services.GetEnumerator();
