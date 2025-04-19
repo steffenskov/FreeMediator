@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMediator", "src\FreeMediator\FreeMediator.csproj", "{1EEBFE5B-3F84-4E64-A3D2-FFC60F4FFECB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{58726ADA-15DC-433F-AFC2-FB97734801A2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{76A9CC35-7265-410F-AC79-947A2EF69720}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FreeMediator.UnitTests", "tests\FreeMediator.UnitTests\FreeMediator.UnitTests.csproj", "{8EE16072-12B5-4FE6-9122-D5929FD2F139}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1EEBFE5B-3F84-4E64-A3D2-FFC60F4FFECB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EEBFE5B-3F84-4E64-A3D2-FFC60F4FFECB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EEBFE5B-3F84-4E64-A3D2-FFC60F4FFECB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EEBFE5B-3F84-4E64-A3D2-FFC60F4FFECB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EE16072-12B5-4FE6-9122-D5929FD2F139}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EE16072-12B5-4FE6-9122-D5929FD2F139}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EE16072-12B5-4FE6-9122-D5929FD2F139}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EE16072-12B5-4FE6-9122-D5929FD2F139}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1EEBFE5B-3F84-4E64-A3D2-FFC60F4FFECB} = {58726ADA-15DC-433F-AFC2-FB97734801A2}
+		{8EE16072-12B5-4FE6-9122-D5929FD2F139} = {76A9CC35-7265-410F-AC79-947A2EF69720}
+	EndGlobalSection
+EndGlobal

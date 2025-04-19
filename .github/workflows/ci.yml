@@ -1,0 +1,36 @@
+name: "Continuous Integration"
+
+on:
+  push:
+    branches:
+      - '**'      # matches every branch
+      - '!main'   # excludes main
+
+concurrency:
+  group: nuget-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SOLUTION_PATH: 'FreeMediator.sln'
+  PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}\output
+  NUGET_SOURCE_URL: 'https://api.nuget.org/v3/index.json'
+
+jobs:
+  test:
+    name: 'test'
+    runs-on: 'ubuntu-latest'
+
+    steps:
+    - name: 'Checkout'
+      uses: actions/checkout@v4
+
+    - name: 'Install dotnet'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: 'Restore packages'
+      run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+    - name: Test
+      run: dotnet test ${{ env.SOLUTION_PATH }}

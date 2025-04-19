@@ -1,0 +1,60 @@
+name: "Continuous Deployment"
+
+on:
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: nuget-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROJECT_PATH: 'src/FreeMediator/FreeMediator.csproj'
+  SOLUTION_PATH: 'FreeMediator.sln'
+  PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}/output
+  NUGET_SOURCE_URL: 'https://api.nuget.org/v3/index.json'
+
+jobs:
+  test:
+    name: 'test'
+    runs-on: 'ubuntu-latest'
+
+    steps:
+    - name: 'Checkout'
+      uses: actions/checkout@v4
+
+    - name: 'Install dotnet'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: 'Restore packages'
+      run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+    - name: Test
+      run: dotnet test ${{ env.SOLUTION_PATH }}
+
+  deploy:
+    needs: test
+    runs-on: 'ubuntu-latest'
+
+    steps:
+    - name: 'Checkout'
+      uses: actions/checkout@v4
+
+    - name: 'Install dotnet'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: 'Restore packages'
+      run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+    - name: 'Build project'
+      run: dotnet build ${{ env.SOLUTION_PATH }} --no-restore --configuration Release
+
+    - name: 'Pack main project'
+      run: dotnet pack ${{ env.PROJECT_PATH }} --no-restore --no-build --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg --output ${{ env.PACKAGE_OUTPUT_DIRECTORY }}
+
+    - name: 'Push package'
+      run: dotnet nuget push ${{ env.PACKAGE_OUTPUT_DIRECTORY }}/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s ${{ env.NUGET_SOURCE_URL }} --skip-duplicate

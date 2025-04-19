@@ -1,0 +1,56 @@
+name: Generate Documentation
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install .Net
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Install DocFX
+        run: |
+          dotnet tool install -g docfx
+
+      - name: Generate Documentation
+        run: |
+          mkdir docfx
+          cd docfx
+          ~/.dotnet/tools/docfx init -y
+          ~/.dotnet/tools/docfx metadata
+          ~/.dotnet/tools/docfx build
+          cd ..
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload generated docfx site
+          path: './docfx/_site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
