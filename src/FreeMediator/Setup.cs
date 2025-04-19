@@ -8,7 +8,7 @@ public static class Setup
 		services.TryAddTransient<ISender>(provider => provider.GetRequiredService<IMediator>());
 		services.TryAddTransient<IPublisher>(provider => provider.GetRequiredService<IMediator>());
 
-		var configuration = new MediatorConfiguration(services);
+		var configuration = new MediatorConfiguration(new ServiceRegistrar(services));
 		configure(configuration);
 	}
 }

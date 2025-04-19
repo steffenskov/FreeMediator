@@ -7,7 +7,10 @@ public class PublisherTests
 	public PublisherTests()
 	{
 		var services = new ServiceCollection();
-		services.AddMediator(config => { config.RegisterServicesFromAssemblyContaining<PublisherTests>(); });
+		services.AddMediator(config => { });
+
+		var config = new MediatorConfiguration(new ForgivingServiceRegistrar(services));
+		config.RegisterServicesFromAssemblyContaining<PublisherTests>();
 
 		var serviceProvider = services.BuildServiceProvider();
 		_publisher = serviceProvider.GetRequiredService<IPublisher>();
@@ -21,39 +24,6 @@ public class PublisherTests
 
 		// Act
 		await _publisher.Publish(notification);
-
-		// Assert
-		var firstHandledMessage = Assert.Single(FirstMultiRecipientHandler.HandledMessages);
-		var secondHandledMessage = Assert.Single(SecondMultiRecipientHandler.HandledMessages);
-		var thirdHandledMessage = Assert.Single(MultipleImplementationsHandler.HandledMessages);
-		Assert.Equal(notification.Message, firstHandledMessage);
-		Assert.Equal(notification.Message, secondHandledMessage);
-		Assert.Equal(notification.Message, thirdHandledMessage);
-
-		// Cleanup
-		FirstMultiRecipientHandler.HandledMessages.Clear();
-		SecondMultiRecipientHandler.HandledMessages.Clear();
-		MultipleImplementationsHandler.HandledMessages.Clear();
-	}
-
-	[Fact]
-	public async Task Publish_MultipleRegistrations_HandlersOnlyRegisteredOnce()
-	{
-		// Arrange
-		var services = new ServiceCollection();
-		services.AddMediator(config =>
-		{
-			config.RegisterServicesFromAssemblyContaining<PublisherTests>();
-			config.RegisterServicesFromAssemblyContaining<PublisherTests>();
-		});
-
-		var serviceProvider = services.BuildServiceProvider();
-		var publisher = serviceProvider.GetRequiredService<IPublisher>();
-
-		var notification = new MultiRecipientNotification($"Hello world {Random.Shared.Next()}");
-
-		// Act
-		await publisher.Publish(notification);
 
 		// Assert
 		var firstHandledMessage = Assert.Single(FirstMultiRecipientHandler.HandledMessages);

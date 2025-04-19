@@ -1,4 +1,4 @@
-#Or FreeMediator
+# FreeMediator
 
 FreeMediator is a free and open-source alternative to the popular [MediatR](https://github.com/jbogard/MediatR) package
 by [Jimmy Bogard](https://github.com/jbogard).
@@ -21,3 +21,9 @@ Feel free to send a PR if you want to add any missing features, (make sure to re
 first).
 
 OR just open an [Issue](https://github.com/steffenskov/FreeMediator/issues) for missing features, and I'll have a look.
+
+## Current limitations
+
+- No support for streaming
+- No support for implementing multiple handlers in a single class if they have the same return type (
+  IRequestHandler<TRequest> is not affected by this limitation though)

@@ -24,9 +24,15 @@ internal class Mediator : IMediator
 	{
 		ArgumentNullException.ThrowIfNull(request);
 
-		var service = _serviceProvider.GetRequiredService<IRequestHandler<TRequest>>();
-
-		await InvokePipelineAsync(request, t => service.Handle(request, t), cancellationToken);
+		var service = _serviceProvider.GetService<IRequestHandler<TRequest>>();
+		if (service is not null)
+		{
+			await InvokePipelineAsync(request, t => service.Handle(request, t), cancellationToken);
+		}
+		else // Maybe the user implemented the handler as IRequestHandler<TRequest, Unit>, let's check
+		{
+			await InvokePipelineAsync(request, t => _serviceProvider.GetRequiredService<IRequestHandler<TRequest, Unit>>().Handle(request, t), cancellationToken);
+		}
 	}
 
 	public async Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)

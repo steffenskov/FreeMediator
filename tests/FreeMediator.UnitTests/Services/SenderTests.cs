@@ -7,7 +7,11 @@ public class SenderTests
 	public SenderTests()
 	{
 		var services = new ServiceCollection();
-		services.AddMediator(config => { config.RegisterServicesFromAssemblyContaining<SenderTests>(); });
+		services.AddMediator(config => { });
+
+		var config = new MediatorConfiguration(new ForgivingServiceRegistrar(services));
+		config.RegisterServicesFromAssemblyContaining<SenderTests>();
+
 		var serviceProvider = services.BuildServiceProvider();
 		_sender = serviceProvider.GetRequiredService<ISender>();
 	}
@@ -107,6 +111,20 @@ public class SenderTests
 		Assert.Equal(intRequest.Value, intResult);
 		Assert.Equal(stringRequest.Value, stringResult);
 	}
+
+	[Fact]
+	public async Task Send_RequestWithWrongHandlerType_StillHandled()
+	{
+		// Arrange
+		var request = new WrongHandlerCommand($"Hello world {Random.Shared.Next()}");
+
+		// Act
+		await _sender.Send(request);
+
+		// Assert
+		var handledMessage = Assert.Single(WrongHandler.HandledMessages);
+		Assert.Equal(request.Message, handledMessage);
+	}
 }
 
 file record EchoRequest(string Message) : IRequest<string>;
@@ -198,5 +216,18 @@ file class GenericEchoRequestHandler<TRequest, TResponse> : IRequestHandler<TReq
 	public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
 	{
 		return Task.FromResult(request.Value);
+	}
+}
+
+file record WrongHandlerCommand(string Message) : IRequest;
+
+file class WrongHandler : IRequestHandler<WrongHandlerCommand, Unit> // Should had just used IRequestHandler<TRequest>
+{
+	public static List<string> HandledMessages { get; } = [];
+
+	public Task<Unit> Handle(WrongHandlerCommand request, CancellationToken cancellationToken = default)
+	{
+		HandledMessages.Add(request.Message);
+		return Unit.Task;
 	}
 }

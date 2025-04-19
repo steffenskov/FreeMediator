@@ -8,9 +8,10 @@ public interface IRequest<out TResponse> : IBaseRequest
 }
 
 /// <summary>
-///     Marker interface for requests without response.
+///     Marker interface for requests without response, forces the return of Unit in the request handler as void cannot be
+///     specified.
 /// </summary>
-public interface IRequest : IBaseRequest
+public interface IRequest : IRequest<Unit>
 {
 }
 

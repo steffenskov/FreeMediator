@@ -9,11 +9,14 @@ public class PipelineBehaviorTests
 		var services = new ServiceCollection();
 		services.AddMediator(config =>
 		{
-			config.RegisterServicesFromAssemblyContaining<PipelineBehaviorTests>();
 			config.AddBehavior<FirstBehavior>();
 			config.AddBehavior<SecondBehavior>();
 			config.AddOpenBehavior(typeof(OpenBehavior<,>));
 		});
+
+		var config = new MediatorConfiguration(new ForgivingServiceRegistrar(services));
+		config.RegisterServicesFromAssemblyContaining<PipelineBehaviorTests>();
+
 		var serviceProvider = services.BuildServiceProvider();
 		_sender = serviceProvider.GetRequiredService<ISender>();
 	}
