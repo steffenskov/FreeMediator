@@ -14,10 +14,3 @@ public interface IRequest<out TResponse> : IBaseRequest
 public interface IRequest : IRequest<Unit>
 {
 }
-
-/// <summary>
-///     Base marker interface, only supposed to be used internally.
-/// </summary>
-public interface IBaseRequest
-{
-}

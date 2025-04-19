@@ -27,3 +27,8 @@ OR just open an [Issue](https://github.com/steffenskov/FreeMediator/issues) for 
 - No support for streaming
 - No support for implementing multiple handlers in a single class if they have the same return type (
   IRequestHandler<TRequest> is not affected by this limitation though)
+
+# Documentation
+
+Auto generated documentation via [DocFx](https://github.com/dotnet/docfx) is available
+here: https://steffenskov.github.io/FreeMediator/

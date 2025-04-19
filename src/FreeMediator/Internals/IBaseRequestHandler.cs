@@ -1,4 +1,4 @@
-namespace FreeMediator.Handlers;
+namespace FreeMediator.Internals;
 
 /// <summary>
 ///     Base marker interface, only supposed to be used internally.

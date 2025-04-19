@@ -23,18 +23,3 @@ public interface IPipelineBehavior<in TRequest, TResponse> : IBasePipelineBehavi
 	/// <param name="cancellationToken">CancellationToken</param>
 	Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken);
 }
-
-/// <summary>
-///     Base marker interface, only supposed to be used internally.
-/// </summary>
-public interface IBasePipelineBehavior<TResponse> : IBasePipelineBehavior
-{
-	Task<TResponse> Handle(IBaseRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken);
-}
-
-/// <summary>
-///     Base marker interface, only supposed to be used internally.
-/// </summary>
-public interface IBasePipelineBehavior
-{
-}

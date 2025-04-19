@@ -1,4 +1,6 @@
-namespace FreeMediator.Configuration;
+// ReSharper disable once CheckNamespace
+
+namespace FreeMediator;
 
 public interface IMediatorConfiguration
 {

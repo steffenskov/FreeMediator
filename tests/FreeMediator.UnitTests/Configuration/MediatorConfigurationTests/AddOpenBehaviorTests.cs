@@ -1,3 +1,5 @@
+using FreeMediator.Internals;
+
 namespace FreeMediator.UnitTests.Configuration.MediatorConfigurationTests;
 
 public partial class MediatorConfigurationTests
