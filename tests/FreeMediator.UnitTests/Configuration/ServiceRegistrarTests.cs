@@ -145,22 +145,28 @@ file class OtherService : IService
 {
 }
 
-file class SingleGenericArgumentType<TNotification> : INotificationHandler<TNotification> where TNotification : INotification
+file class SingleGenericArgumentType<TNotification> : INotificationHandler<TNotification>
+	where TNotification : IRequestMarker, INotification
 {
-	public Task Handle(TNotification notification, CancellationToken cancellationToken = default)
+	public Task Handle(TNotification notification, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
 }
 
-file class TwoGenericArgumentType<TRequest, TResponse> : IRequestHandler<TRequest, TResponse> where TRequest : IRequest<TResponse>
+file class TwoGenericArgumentType<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
+	where TRequest : IRequestMarker, IRequest<TResponse>
 {
-	public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken = default)
+	public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
 }
 
 file class ThreeGenericArgumentType<T, T2, T3>
+{
+}
+
+file interface IRequestMarker
 {
 }

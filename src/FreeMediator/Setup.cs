@@ -2,7 +2,7 @@ namespace FreeMediator;
 
 public static class Setup
 {
-	public static void AddMediator(this IServiceCollection services, Action<MediatorConfiguration> configure)
+	public static void AddMediator(this IServiceCollection services, Action<IMediatorConfiguration> configure)
 	{
 		services.TryAddTransient<IMediator, Mediator>();
 		services.TryAddTransient<ISender>(provider => provider.GetRequiredService<IMediator>());

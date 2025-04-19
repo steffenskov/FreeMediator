@@ -153,7 +153,7 @@ file class FakeCommand : IRequest;
 
 file class FakeCommandHandler : IRequestHandler<FakeCommand>
 {
-	public Task<Unit> Handle(FakeCommand command, CancellationToken cancellationToken = default)
+	public Task<Unit> Handle(FakeCommand command, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
@@ -161,7 +161,7 @@ file class FakeCommandHandler : IRequestHandler<FakeCommand>
 
 file class FakeCommandHandler2 : IRequestHandler<FakeCommand>
 {
-	public Task<Unit> Handle(FakeCommand request, CancellationToken cancellationToken = default)
+	public Task<Unit> Handle(FakeCommand request, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
@@ -171,7 +171,7 @@ file record FakeRequest(string Message) : IRequest<string>;
 
 file class FakeRequestHandler : IRequestHandler<FakeRequest, string>
 {
-	public Task<string> Handle(FakeRequest request, CancellationToken cancellationToken = default)
+	public Task<string> Handle(FakeRequest request, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
@@ -179,7 +179,7 @@ file class FakeRequestHandler : IRequestHandler<FakeRequest, string>
 
 file class FakeRequestHandler2 : IRequestHandler<FakeRequest, string>
 {
-	public Task<string> Handle(FakeRequest request, CancellationToken cancellationToken = default)
+	public Task<string> Handle(FakeRequest request, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
@@ -189,7 +189,7 @@ file record FakeNotification(string Message) : INotification;
 
 file class FakeNotificationHandler : INotificationHandler<FakeNotification>
 {
-	public Task Handle(FakeNotification notification, CancellationToken cancellationToken = default)
+	public Task Handle(FakeNotification notification, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
@@ -198,7 +198,7 @@ file class FakeNotificationHandler : INotificationHandler<FakeNotification>
 file class InvalidGenericNotificationHandler<TNotification, T> : INotificationHandler<TNotification>
 	where TNotification : INotification
 {
-	public Task Handle(TNotification notification, CancellationToken cancellationToken = default)
+	public Task Handle(TNotification notification, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
@@ -207,7 +207,7 @@ file class InvalidGenericNotificationHandler<TNotification, T> : INotificationHa
 file class InvalidSingleArgumentGenericRequestHandler<TRequest> : IRequestHandler<TRequest>
 	where TRequest : IRequest
 {
-	public Task<Unit> Handle(TRequest request, CancellationToken cancellationToken = default)
+	public Task<Unit> Handle(TRequest request, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
@@ -216,7 +216,7 @@ file class InvalidSingleArgumentGenericRequestHandler<TRequest> : IRequestHandle
 file class InvalidTripleArgumentGenericRequestHandler<TRequest, TResponse, T> : IRequestHandler<TRequest, TResponse>
 	where TRequest : IRequest<TResponse>
 {
-	public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken = default)
+	public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}

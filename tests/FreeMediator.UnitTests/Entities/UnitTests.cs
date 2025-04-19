@@ -29,7 +29,7 @@ public class UnitTests
 	public void Unit_Value_ReturnsSingletonInstance()
 	{
 		// Act
-		var unitValue = new Unit().Value;
+		var unitValue = Unit.Value;
 
 		// Assert
 		Assert.Equal(default, unitValue);

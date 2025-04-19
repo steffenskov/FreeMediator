@@ -58,7 +58,7 @@ file record RequestWithBehavior(string Message) : IRequest
 
 file class RequestWithBehaviorHandler : IRequestHandler<RequestWithBehavior>
 {
-	public Task<Unit> Handle(RequestWithBehavior request, CancellationToken cancellationToken = default)
+	public Task<Unit> Handle(RequestWithBehavior request, CancellationToken cancellationToken)
 	{
 		return Unit.Task;
 	}
@@ -89,7 +89,7 @@ file record RequestWithOpenBehavior(string Message) : IRequest, IRequestWithProp
 
 file class RequestWithOpenBehaviorHandler : IRequestHandler<RequestWithOpenBehavior>
 {
-	public Task<Unit> Handle(RequestWithOpenBehavior request, CancellationToken cancellationToken = default)
+	public Task<Unit> Handle(RequestWithOpenBehavior request, CancellationToken cancellationToken)
 	{
 		return Unit.Task;
 	}

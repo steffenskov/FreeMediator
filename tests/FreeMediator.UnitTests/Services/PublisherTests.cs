@@ -92,6 +92,19 @@ public class PublisherTests
 		Assert.Equal(intNotification.Value, intMessage);
 		Assert.Equal(stringNotification.Value, stringMessage);
 	}
+
+	[Fact]
+	public async Task Publish_MultipleHandlersAllThrow_ThrowsAggregateException()
+	{
+		// Arrange
+		var notification = new ThrowingNotification($"Hello world {Random.Shared.Next()}");
+
+		// Act && Assert
+		var ex = await Assert.ThrowsAsync<AggregateException>(async () => await _publisher.Publish(notification));
+
+		Assert.Contains(ex.InnerExceptions, e => e is InvalidOperationException { Message: "An error occurred while handling the notification." });
+		Assert.Contains(ex.InnerExceptions, e => e is NotSupportedException { Message: "An error occurred while handling the notification." });
+	}
 }
 
 file record MultiRecipientNotification(string Message) : INotification;
@@ -173,9 +186,27 @@ file class GenericNotificationHandler<TNotification> : INotificationHandler<TNot
 {
 	public static List<object?> HandledMessages { get; } = [];
 
-	public Task Handle(TNotification notification, CancellationToken cancellationToken = default)
+	public Task Handle(TNotification notification, CancellationToken cancellationToken)
 	{
 		HandledMessages.Add(notification.Value);
 		return Task.CompletedTask;
+	}
+}
+
+file record ThrowingNotification(string Message) : INotification;
+
+file class ThrowingNotificationHandler : INotificationHandler<ThrowingNotification>
+{
+	public Task Handle(ThrowingNotification notification, CancellationToken cancellationToken)
+	{
+		throw new InvalidOperationException("An error occurred while handling the notification.");
+	}
+}
+
+file class ThrowingNotificationHandler2 : INotificationHandler<ThrowingNotification>
+{
+	public Task Handle(ThrowingNotification notification, CancellationToken cancellationToken)
+	{
+		throw new NotSupportedException("An error occurred while handling the notification.");
 	}
 }

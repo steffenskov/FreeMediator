@@ -9,22 +9,23 @@ internal class Mediator : IMediator
 		_serviceProvider = serviceProvider;
 	}
 
-	public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+	public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);
 
 		var handlerType = typeof(IRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResponse));
-		var service = (IBaseRequestHandler<TResponse>)_serviceProvider.GetRequiredService(handlerType);
+		var service = _serviceProvider.GetServices(handlerType).Cast<IBaseRequestHandler<TResponse>>().Single();
 
 		return await InvokePipelineAsync(request, t => service.Handle(request, t), cancellationToken);
 	}
 
-	public async Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
+	public async Task Send<TRequest>(TRequest request, CancellationToken cancellationToken)
 		where TRequest : IRequest
 	{
 		ArgumentNullException.ThrowIfNull(request);
 
-		var service = _serviceProvider.GetService<IRequestHandler<TRequest>>();
+		var service = _serviceProvider.GetServices<IRequestHandler<TRequest>>().SingleOrDefault();
+
 		if (service is not null)
 		{
 			await InvokePipelineAsync(request, t => service.Handle(request, t), cancellationToken);
@@ -35,7 +36,7 @@ internal class Mediator : IMediator
 		}
 	}
 
-	public async Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken = default)
+	public async Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken)
 		where TNotification : INotification
 	{
 		ArgumentNullException.ThrowIfNull(notification);

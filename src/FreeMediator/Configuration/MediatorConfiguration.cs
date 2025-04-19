@@ -1,6 +1,6 @@
 namespace FreeMediator.Configuration;
 
-public class MediatorConfiguration
+internal class MediatorConfiguration : IMediatorConfiguration
 {
 	private readonly IServiceRegistrar _services;
 
@@ -11,7 +11,7 @@ public class MediatorConfiguration
 
 	#region AddOpenBehavior
 
-	public MediatorConfiguration AddOpenBehavior(Type implementationType, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
+	public IMediatorConfiguration AddOpenBehavior(Type implementationType, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
 	{
 		if (!implementationType.IsGenericType)
 		{
@@ -45,7 +45,7 @@ public class MediatorConfiguration
 		return this;
 	}
 
-	public MediatorConfiguration AddOpenBehaviors(IEnumerable<Type> openBehaviorTypes, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
+	public IMediatorConfiguration AddOpenBehaviors(IEnumerable<Type> openBehaviorTypes, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
 	{
 		foreach (var openBehaviorType in openBehaviorTypes)
 		{
@@ -59,13 +59,13 @@ public class MediatorConfiguration
 
 	#region AddBehavior
 
-	public MediatorConfiguration AddBehavior<TBehavior>(ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
+	public IMediatorConfiguration AddBehavior<TBehavior>(ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
 		where TBehavior : IBasePipelineBehavior
 	{
 		return AddBehavior(typeof(TBehavior), serviceLifetime);
 	}
 
-	public MediatorConfiguration AddBehavior(Type implementationType, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
+	public IMediatorConfiguration AddBehavior(Type implementationType, ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
 	{
 		if (implementationType.IsGenericType)
 		{
@@ -92,17 +92,17 @@ public class MediatorConfiguration
 
 	#region RegisterServices
 
-	public MediatorConfiguration RegisterServicesFromAssemblyContaining<T>()
+	public IMediatorConfiguration RegisterServicesFromAssemblyContaining<T>()
 	{
 		return RegisterServicesFromAssemblyContaining(typeof(T));
 	}
 
-	public MediatorConfiguration RegisterServicesFromAssemblyContaining(Type markerType)
+	public IMediatorConfiguration RegisterServicesFromAssemblyContaining(Type markerType)
 	{
 		return RegisterServicesFromAssembly(markerType.Assembly);
 	}
 
-	public MediatorConfiguration RegisterServicesFromAssemblies(params IEnumerable<Assembly> assemblies)
+	public IMediatorConfiguration RegisterServicesFromAssemblies(params IEnumerable<Assembly> assemblies)
 	{
 		foreach (var assembly in assemblies)
 		{
@@ -112,7 +112,7 @@ public class MediatorConfiguration
 		return this;
 	}
 
-	public MediatorConfiguration RegisterServicesFromAssembly(Assembly assembly)
+	public IMediatorConfiguration RegisterServicesFromAssembly(Assembly assembly)
 	{
 		var types = assembly.GetTypes();
 		foreach (var type in types)
