@@ -28,6 +28,44 @@ OR just open an [Issue](https://github.com/steffenskov/FreeMediator/issues) for 
 - No support for implementing multiple handlers in a single class if they have the same return type (
   IRequestHandler<TRequest> is not affected by this limitation though)
 
+# Usage
+
+FreeMediator is intended to be used with .Net Dependency Injection, so start off by adding it to your DI:
+
+```csharp
+services.AddMediator(config => 
+{
+    config.RegisterServicesFromAssemblyContaining<SomeRequest>(); // There are other ways to register services as well
+});
+```
+
+This will scan the assembly containing `SomeRequest` for all classes implementing `IRequestHandler<TRequest, TResponse>`
+and `INotificationHandler<TNotification>` and register them with the DI container.
+
+It also registers the `IMediator` interface itself (as well as a `ISender` and `IPublisher` interface, which are both
+subsets of `IMediator`).
+
+From here on simply inject `IMediator` (or `ISender`/`IPublisher`) into your classes and use it to send requests or
+publish notifications:
+
+```csharp
+public class SomeService
+{
+    private readonly IMediator _mediator;
+
+    public SomeService(IMediator mediator
+    {
+        _mediator = mediator;
+    }
+
+    public async Task<SomeResponse> DoSomethingAsync(CancellationToken cancellationToken)
+    {
+        var response = await _sender.Send(new SomeRequest(), cancellationToken);
+        return response;
+    }
+}
+```
+
 # Documentation
 
 Auto generated documentation via [DocFx](https://github.com/dotnet/docfx) is available
