@@ -12,7 +12,7 @@
         <Copyright>Steffen Skov 2025</Copyright>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageProjectUrl>https://github.com/steffenskov/FreeMediator</PackageProjectUrl>
-        <PackageTags>mediator</PackageTags>
+        <PackageTags>mediator, request, response, queries, commands, notifications, CQRS</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
