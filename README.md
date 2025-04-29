@@ -22,6 +22,10 @@ first).
 
 OR just open an [Issue](https://github.com/steffenskov/FreeMediator/issues) for missing features, and I'll have a look.
 
+## Features outside of the original MediatR
+
+- Pipeline behavior support for notifications (both open and closed behaviors)
+
 ## Current limitations
 
 - No support for streaming
@@ -65,6 +69,10 @@ public class SomeService
     }
 }
 ```
+
+# Changelog
+
+See the [CHANGELOG](CHANGELOG.md) for a list of changes and new features.
 
 # Documentation
 
