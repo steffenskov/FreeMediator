@@ -36,12 +36,15 @@ internal class Mediator : IMediator
 		}
 	}
 
+
 	public async Task Publish<TNotification>(TNotification notification, CancellationToken cancellationToken)
 		where TNotification : INotification
 	{
 		ArgumentNullException.ThrowIfNull(notification);
 
 		var services = _serviceProvider.GetServices<INotificationHandler<TNotification>>();
+
+		await InvokePipelineAsync(notification, cancellationToken);
 
 		List<Exception> exceptions = [];
 
@@ -66,12 +69,26 @@ internal class Mediator : IMediator
 	private async Task<TResponse> InvokePipelineAsync<TResponse>(IBaseRequest request, RequestHandlerDelegate<TResponse> serviceHandler, CancellationToken cancellationToken)
 	{
 		var pipelineBehaviorType = typeof(IPipelineBehavior<,>).MakeGenericType(request.GetType(), typeof(TResponse));
-		var behaviors = _serviceProvider.GetServices(pipelineBehaviorType).Cast<IBasePipelineBehavior<TResponse>>();
+		var behaviors = _serviceProvider.GetServices(pipelineBehaviorType).Cast<IBaseRequestPipelineBehavior<TResponse>>();
 
 		var pipeline = behaviors
 			.Reverse() // necessary to archive in-DI-order execution, due to the way they're piped together
 			.Aggregate(serviceHandler, (next, pipeline) => t => pipeline.Handle(request, next, t));
 
 		return await pipeline(cancellationToken);
+	}
+
+	private async Task InvokePipelineAsync(INotification notification, CancellationToken cancellationToken)
+	{
+		var pipelineBehaviorType = typeof(IPipelineBehavior<>).MakeGenericType(notification.GetType());
+		var behaviors = _serviceProvider.GetServices(pipelineBehaviorType).Cast<IBaseNotificationPipelineBehavior>();
+
+		NotificationHandlerDelegate lastHandler = _ => Task.CompletedTask;
+
+		var pipeline = behaviors
+			.Reverse() // necessary to archive in-DI-order execution, due to the way they're piped together
+			.Aggregate(lastHandler, (next, pipeline) => t => pipeline.Handle(notification, next, t));
+
+		await pipeline(cancellationToken);
 	}
 }

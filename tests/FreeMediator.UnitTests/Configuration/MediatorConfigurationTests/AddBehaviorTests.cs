@@ -25,7 +25,7 @@ public partial class MediatorConfigurationTests
 		// Act && Assert
 		var ex = Assert.Throws<ArgumentException>(() => configuration.AddBehavior(typeof(ClosedBehaviorWithoutInterfaceImplementation)));
 
-		Assert.Equal($"{typeof(ClosedBehaviorWithoutInterfaceImplementation).Name} must implement {typeof(IPipelineBehavior<,>).Name} (Parameter 'implementationType')", ex.Message);
+		Assert.Equal($"{typeof(ClosedBehaviorWithoutInterfaceImplementation).Name} must implement IPipelineBehavior<> or IPipelineBehavior<,> (Parameter 'implementationType')", ex.Message);
 	}
 
 	[Fact]
