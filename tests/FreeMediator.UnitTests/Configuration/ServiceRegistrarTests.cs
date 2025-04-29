@@ -3,7 +3,7 @@ namespace FreeMediator.UnitTests.Configuration;
 public class ServiceRegistrarTests
 {
 	[Fact]
-	public void AddTransientDistinctImplementation_MultipleAddsOfSameType_Throws()
+	public void AddDistinctImplementation_MultipleAddsOfSameType_Throws()
 	{
 		// Arrange
 		var registrar = new ServiceRegistrar(new ServiceCollection());
@@ -17,7 +17,7 @@ public class ServiceRegistrarTests
 	}
 
 	[Fact]
-	public void AddTransientDistinctImplementation_DifferentImplementations_AddsBoth()
+	public void AddDistinctImplementation_DifferentImplementations_AddsBoth()
 	{
 		// Arrange
 		var serviceCollection = new ServiceCollection();
@@ -37,7 +37,7 @@ public class ServiceRegistrarTests
 	}
 
 	[Fact]
-	public void AddTransientDistinctImplementation_DifferentLifespans_Throws()
+	public void AddDistinctImplementation_DifferentLifespans_Throws()
 	{
 		// Arrange
 		var registrar = new ServiceRegistrar(new ServiceCollection());
@@ -49,6 +49,49 @@ public class ServiceRegistrarTests
 		// Assert
 		var ex = Assert.Throws<ArgumentException>(() => registrar.AddDistinctImplementation(typeof(IService), typeof(ConcreteService), ServiceLifetime.Singleton));
 		Assert.Equal($"{typeof(ConcreteService).Name} is already registered (Parameter 'implementationType')", ex.Message);
+	}
+
+	[Fact]
+	public void AddDistinctService_NotRegistered_Registers()
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		var registrar = new ServiceRegistrar(services);
+
+		// Act
+		registrar.AddDistinctService(typeof(IService), typeof(ConcreteService));
+
+		// Assert
+		Assert.Single(services, descriptor => descriptor.ServiceType == typeof(IService));
+	}
+
+	[Fact]
+	public void AddDistinctService_AlreadyRegistered_Throws()
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		var registrar = new ServiceRegistrar(services);
+		registrar.AddDistinctService(typeof(IService), typeof(ConcreteService));
+
+		// Act
+		var ex = Assert.Throws<ArgumentException>(() => registrar.AddDistinctService(typeof(IService), typeof(ConcreteService)));
+		Assert.Equal($"{typeof(IService).Name} already has a registered implementation ({typeof(ConcreteService).Name}) (Parameter 'service')", ex.Message);
+	}
+
+	[Fact]
+	public void GetEnumerator_WithoutGenerics_ReturnsSameEnumerator()
+	{
+		// Arrange
+		var registrar = new ServiceRegistrar(new ServiceCollection());
+		registrar.RegisterGenericNotificationHandler(typeof(SingleGenericArgumentType<>));
+
+		using var defaultEnumerator = registrar.GetEnumerator();
+
+		// Act
+		var nonGenericEnumerator = ((IEnumerable)registrar).GetEnumerator();
+
+		// Assert
+		Assert.Equal(defaultEnumerator, nonGenericEnumerator);
 	}
 
 	[Fact]
@@ -112,7 +155,6 @@ public class ServiceRegistrarTests
 		// Arrange
 		var services = new ServiceCollection();
 		var registrar = new ServiceRegistrar(services);
-
 
 		// Act
 		registrar.RegisterGenericNotificationHandler(typeof(SingleGenericArgumentType<>));

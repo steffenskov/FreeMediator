@@ -23,23 +23,33 @@ internal class MediatorConfiguration : IMediatorConfiguration
 			throw new ArgumentException($"{nameof(implementationType)} must be a generic type definition", nameof(implementationType));
 		}
 
-		if (implementationType.GetGenericArguments().Length != 2)
+		var implementedInterfaces = implementationType.GetInterfaces()
+			.Where(interfaceType => interfaceType.IsGenericType)
+			.Select(t => t.GetGenericTypeDefinition())
+			.Where(genericTypeDefinition => genericTypeDefinition == typeof(IPipelineBehavior<>) || genericTypeDefinition == typeof(IPipelineBehavior<,>))
+			.ToList();
+
+		if (implementedInterfaces.Count == 0)
 		{
-			throw new ArgumentException($"{nameof(implementationType)} must take 2 type arguments matching IPipelineBehavior<,>", nameof(implementationType));
+			throw new ArgumentException($"{implementationType.Name} must implement IPipelineBehavior<> or IPipelineBehavior<,>", nameof(implementationType));
 		}
 
-		var implementsPipeline = implementationType.GetInterfaces()
-			.Any(interfaceType => interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>));
-
-		if (!implementsPipeline)
+		if (implementedInterfaces.Count > 1)
 		{
-			throw new ArgumentException($"{implementationType.Name} must implement {typeof(IPipelineBehavior<,>).Name}", nameof(implementationType));
+			throw new ArgumentException($"{implementationType.Name} can only implement either IPipelineBehavior<> or IPipelineBehavior<,>", nameof(implementationType));
+		}
+
+		var implementedInterface = implementedInterfaces.Single();
+
+		if (implementationType.GetGenericArguments().Length != implementedInterface.GetGenericArguments().Length)
+		{
+			throw new ArgumentException($"{nameof(implementationType)} must take the same number of type arguments (have the same arity) as the IPipelineBehavior<> or IPipelineBehavior<,> interface implemented.", nameof(implementationType));
 		}
 
 		if (_services.All(x => x.ServiceType != implementationType))
 
 		{
-			_services.AddDistinctImplementation(typeof(IPipelineBehavior<,>), implementationType, serviceLifetime);
+			_services.AddDistinctImplementation(implementedInterface, implementationType, serviceLifetime);
 		}
 
 		return this;
@@ -72,12 +82,24 @@ internal class MediatorConfiguration : IMediatorConfiguration
 			throw new ArgumentException($"{nameof(implementationType)} cannot be a generic type", nameof(implementationType));
 		}
 
-		var implementedInterfaces = implementationType.GetInterfaces()
-			.Where(interfaceType => interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>)).ToHashSet();
+		HashSet<Type> implementedInterfaces = [];
+		foreach (var interfaceType in implementationType.GetInterfaces())
+		{
+			if (!interfaceType.IsGenericType)
+			{
+				continue;
+			}
+
+			var genericTypeDefinition = interfaceType.GetGenericTypeDefinition();
+			if (genericTypeDefinition == typeof(IPipelineBehavior<>) || genericTypeDefinition == typeof(IPipelineBehavior<,>))
+			{
+				implementedInterfaces.Add(interfaceType);
+			}
+		}
 
 		if (implementedInterfaces.Count == 0)
 		{
-			throw new ArgumentException($"{implementationType.Name} must implement {typeof(IPipelineBehavior<,>).Name}", nameof(implementationType));
+			throw new ArgumentException($"{implementationType.Name} must implement IPipelineBehavior<> or IPipelineBehavior<,>", nameof(implementationType));
 		}
 
 		foreach (var implementedInterface in implementedInterfaces)

@@ -37,7 +37,19 @@ public partial class MediatorConfigurationTests
 		// Act && Assert
 		var ex = Assert.Throws<ArgumentException>(() => configuration.AddOpenBehavior(typeof(GenericBehaviorWithSingleArg<>)));
 
-		Assert.Equal("implementationType must take 2 type arguments matching IPipelineBehavior<,> (Parameter 'implementationType')", ex.Message);
+		Assert.Equal("implementationType must take the same number of type arguments (have the same arity) as the IPipelineBehavior<> or IPipelineBehavior<,> interface implemented. (Parameter 'implementationType')", ex.Message);
+	}
+
+	[Fact]
+	public void AddOpenBehavior_ImplementsBothNotificationAndRequestIPipelineBehavior_Throws()
+	{
+		// Arrange
+		var (configuration, _) = CreateConfiguration();
+
+		// Act && Assert
+		var ex = Assert.Throws<ArgumentException>(() => configuration.AddOpenBehavior(typeof(GenericBehaviorWithBothInterfaceImplementations<,>)));
+
+		Assert.Equal($"{typeof(GenericBehaviorWithBothInterfaceImplementations<FakeNotificationAndRequest, Unit>).Name} can only implement either IPipelineBehavior<> or IPipelineBehavior<,> (Parameter 'implementationType')", ex.Message);
 	}
 
 	[Fact]
@@ -49,7 +61,7 @@ public partial class MediatorConfigurationTests
 		// Act && Assert
 		var ex = Assert.Throws<ArgumentException>(() => configuration.AddOpenBehavior(typeof(GenericBehaviorWithoutInterfaceImplementation<,>)));
 
-		Assert.Equal($"{typeof(GenericBehaviorWithoutInterfaceImplementation<FakeRequest, Unit>).Name} must implement {typeof(IPipelineBehavior<,>).Name} (Parameter 'implementationType')", ex.Message);
+		Assert.Equal($"{typeof(GenericBehaviorWithoutInterfaceImplementation<FakeRequest, Unit>).Name} must implement IPipelineBehavior<> or IPipelineBehavior<,> (Parameter 'implementationType')", ex.Message);
 	}
 
 	[Fact]
@@ -144,6 +156,22 @@ file class GenericBehaviorWithSingleArg<TRequest> : IPipelineBehavior<TRequest, 
 file class GenericBehaviorWithoutInterfaceImplementation<TRequest, TResponse>
 {
 	public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+}
+
+file class FakeNotificationAndRequest : INotification, IRequest;
+
+file class GenericBehaviorWithBothInterfaceImplementations<TRequest, TResponse> : IPipelineBehavior<TRequest>, IPipelineBehavior<TRequest, TResponse>
+	where TRequest : IBaseRequest, INotification
+{
+	public Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+
+	public Task Handle(TRequest notification, NotificationHandlerDelegate next, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
