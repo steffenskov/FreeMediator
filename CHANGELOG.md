@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - Behaviors for `INotification` can now be used for post-handling processing as well (by placing logic AFTER the call to `next()`)
-- `IRequestHandler`'s `Handle` method now returns `Task` instead of `Task<Unit>` to be compatible with MediatR
+- `IRequestHandler's` `Handle` method now returns `Task` instead of `Task<Unit>` to be compatible with MediatR
 
 
 ## [1.1.0] - 2025-04-29
