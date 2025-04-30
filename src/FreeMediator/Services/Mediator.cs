@@ -16,7 +16,7 @@ internal class Mediator : IMediator
 		var handlerType = typeof(IRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResponse));
 		var service = _serviceProvider.GetServices(handlerType).Cast<IBaseRequestHandler<TResponse>>().Single();
 
-		return await InvokePipelineAsync(request, t => service.Handle(request, t), cancellationToken);
+		return await InvokeRequestPipelineAsync(request, ct => service.Handle(request, ct), cancellationToken);
 	}
 
 	public async Task Send<TRequest>(TRequest request, CancellationToken cancellationToken)
@@ -28,11 +28,17 @@ internal class Mediator : IMediator
 
 		if (service is not null)
 		{
-			await InvokePipelineAsync(request, t => service.Handle(request, t), cancellationToken);
+			RequestHandlerDelegate<Unit> serviceHandler = async ct =>
+			{
+				await service.Handle(request, ct);
+				return Unit.Value;
+			};
+
+			await InvokeRequestPipelineAsync(request, serviceHandler, cancellationToken);
 		}
 		else // Maybe the user implemented the handler as IRequestHandler<TRequest, Unit>, let's check
 		{
-			await InvokePipelineAsync(request, t => _serviceProvider.GetRequiredService<IRequestHandler<TRequest, Unit>>().Handle(request, t), cancellationToken);
+			await InvokeRequestPipelineAsync(request, ct => _serviceProvider.GetRequiredService<IRequestHandler<TRequest, Unit>>().Handle(request, ct), cancellationToken);
 		}
 	}
 
@@ -44,29 +50,32 @@ internal class Mediator : IMediator
 
 		var services = _serviceProvider.GetServices<INotificationHandler<TNotification>>();
 
-		await InvokePipelineAsync(notification, cancellationToken);
-
-		List<Exception> exceptions = [];
-
-		foreach (var service in services)
+		NotificationHandlerDelegate serviceHandler = async ct =>
 		{
-			try
-			{
-				await service.Handle(notification, cancellationToken);
-			}
-			catch (Exception ex)
-			{
-				exceptions.Add(ex);
-			}
-		}
+			List<Exception> exceptions = [];
 
-		if (exceptions.Count > 0)
-		{
-			throw new AggregateException(exceptions);
-		}
+			foreach (var service in services)
+			{
+				try
+				{
+					await service.Handle(notification, ct);
+				}
+				catch (Exception ex)
+				{
+					exceptions.Add(ex);
+				}
+			}
+
+			if (exceptions.Count > 0)
+			{
+				throw new AggregateException(exceptions);
+			}
+		};
+
+		await InvokeNotificationPipelineAsync(notification, serviceHandler, cancellationToken);
 	}
 
-	private async Task<TResponse> InvokePipelineAsync<TResponse>(IBaseRequest request, RequestHandlerDelegate<TResponse> serviceHandler, CancellationToken cancellationToken)
+	private async Task<TResponse> InvokeRequestPipelineAsync<TResponse>(IBaseRequest request, RequestHandlerDelegate<TResponse> serviceHandler, CancellationToken cancellationToken)
 	{
 		var pipelineBehaviorType = typeof(IPipelineBehavior<,>).MakeGenericType(request.GetType(), typeof(TResponse));
 		var behaviors = _serviceProvider.GetServices(pipelineBehaviorType).Cast<IBaseRequestPipelineBehavior<TResponse>>();
@@ -78,16 +87,14 @@ internal class Mediator : IMediator
 		return await pipeline(cancellationToken);
 	}
 
-	private async Task InvokePipelineAsync(INotification notification, CancellationToken cancellationToken)
+	private async Task InvokeNotificationPipelineAsync(INotification notification, NotificationHandlerDelegate serviceHandler, CancellationToken cancellationToken)
 	{
 		var pipelineBehaviorType = typeof(IPipelineBehavior<>).MakeGenericType(notification.GetType());
 		var behaviors = _serviceProvider.GetServices(pipelineBehaviorType).Cast<IBaseNotificationPipelineBehavior>();
 
-		NotificationHandlerDelegate lastHandler = _ => Task.CompletedTask;
-
 		var pipeline = behaviors
 			.Reverse() // necessary to archive in-DI-order execution, due to the way they're piped together
-			.Aggregate(lastHandler, (next, pipeline) => t => pipeline.Handle(notification, next, t));
+			.Aggregate(serviceHandler, (next, pipeline) => t => pipeline.Handle(notification, next, t));
 
 		await pipeline(cancellationToken);
 	}

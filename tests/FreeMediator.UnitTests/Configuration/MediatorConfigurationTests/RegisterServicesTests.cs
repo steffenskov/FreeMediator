@@ -153,7 +153,7 @@ file class FakeCommand : IRequest;
 
 file class FakeCommandHandler : IRequestHandler<FakeCommand>
 {
-	public Task<Unit> Handle(FakeCommand command, CancellationToken cancellationToken)
+	public Task Handle(FakeCommand command, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
@@ -161,7 +161,7 @@ file class FakeCommandHandler : IRequestHandler<FakeCommand>
 
 file class FakeCommandHandler2 : IRequestHandler<FakeCommand>
 {
-	public Task<Unit> Handle(FakeCommand request, CancellationToken cancellationToken)
+	public Task Handle(FakeCommand request, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
@@ -207,7 +207,7 @@ file class InvalidGenericNotificationHandler<TNotification, T> : INotificationHa
 file class InvalidSingleArgumentGenericRequestHandler<TRequest> : IRequestHandler<TRequest>
 	where TRequest : IRequest
 {
-	public Task<Unit> Handle(TRequest request, CancellationToken cancellationToken)
+	public Task Handle(TRequest request, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}

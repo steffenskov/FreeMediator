@@ -15,6 +15,9 @@ public class PipelineBehaviorTests
 			config.AddBehavior<FirstNotificationBehavior>();
 			config.AddBehavior<SecondNotificationBehavior>();
 			config.AddOpenBehavior(typeof(OpenBehavior<>));
+
+			config.AddBehavior<NotificationWithPostProcessingBehavior>();
+			config.AddBehavior<RequestWithPostProcessingBehavior>();
 		});
 
 		var config = new MediatorConfiguration(new ForgivingServiceRegistrar(services));
@@ -52,6 +55,20 @@ public class PipelineBehaviorTests
 	}
 
 	[Fact]
+	public async Task Publish_WithPostProcessingBehavior_BehaviorInvokedAfterHandler()
+	{
+		// Arrange
+		var notification = new NotificationWithPostProcessing { Message = "Hello world" };
+
+		// Act
+		await _mediator.Publish(notification);
+
+		// Assert
+		Assert.Equal("Hello world", NotificationWithPostProcessingHandler.ReceivedMessage);
+		Assert.Equal("Mutated by post-processing behavior", notification.Message);
+	}
+
+	[Fact]
 	public async Task Send_WithTwoBehaviors_BehaviorsInvokedInCorrectOrder()
 	{
 		// Arrange
@@ -76,6 +93,20 @@ public class PipelineBehaviorTests
 
 		// Assert
 		Assert.Equal(42, request.BehaviorProperty);
+	}
+
+	[Fact]
+	public async Task Send_WithPostProcessingBehavior_BehaviorInvokedAfterHandler()
+	{
+		// Arrange
+		var request = new RequestWithPostProcessing { Message = "Hello world" };
+
+		// Act
+		await _mediator.Send(request);
+
+		// Assert
+		Assert.Equal("Hello world", RequestWithPostProcessingHandler.ReceivedMessage);
+		Assert.Equal("Mutated by post-processing behavior", request.Message);
 	}
 }
 
@@ -141,6 +172,31 @@ file class OpenBehavior<TNotification> : IPipelineBehavior<TNotification>
 	}
 }
 
+file record NotificationWithPostProcessing : INotification
+{
+	public required string Message { get; set; }
+}
+
+file class NotificationWithPostProcessingHandler : INotificationHandler<NotificationWithPostProcessing>
+{
+	public static string? ReceivedMessage { get; private set; }
+
+	public Task Handle(NotificationWithPostProcessing notification, CancellationToken cancellationToken)
+	{
+		ReceivedMessage = notification.Message;
+		return Task.CompletedTask;
+	}
+}
+
+file class NotificationWithPostProcessingBehavior : IPipelineBehavior<NotificationWithPostProcessing>
+{
+	public async Task Handle(NotificationWithPostProcessing notification, NotificationHandlerDelegate next, CancellationToken cancellationToken)
+	{
+		await next(cancellationToken);
+		notification.Message = "Mutated by post-processing behavior";
+	}
+}
+
 #endregion
 
 #region Requests
@@ -153,9 +209,9 @@ file record RequestWithBehavior(string Message) : IRequest
 
 file class RequestWithBehaviorHandler : IRequestHandler<RequestWithBehavior>
 {
-	public Task<Unit> Handle(RequestWithBehavior request, CancellationToken cancellationToken)
+	public Task Handle(RequestWithBehavior request, CancellationToken cancellationToken)
 	{
-		return Unit.Task;
+		return Task.CompletedTask;
 	}
 }
 
@@ -184,9 +240,9 @@ file record RequestWithOpenBehavior(string Message) : IRequest, IRequestWithProp
 
 file class RequestWithOpenBehaviorHandler : IRequestHandler<RequestWithOpenBehavior>
 {
-	public Task<Unit> Handle(RequestWithOpenBehavior request, CancellationToken cancellationToken)
+	public Task Handle(RequestWithOpenBehavior request, CancellationToken cancellationToken)
 	{
-		return Unit.Task;
+		return Task.CompletedTask;
 	}
 }
 
@@ -202,6 +258,33 @@ file class OpenBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResp
 	{
 		request.BehaviorProperty = 42;
 		return next(cancellationToken);
+	}
+}
+
+file record RequestWithPostProcessing : IRequest
+{
+	public required string Message { get; set; }
+}
+
+file class RequestWithPostProcessingHandler : IRequestHandler<RequestWithPostProcessing>
+{
+	public static string? ReceivedMessage { get; private set; }
+
+	public Task Handle(RequestWithPostProcessing notification, CancellationToken cancellationToken)
+	{
+		ReceivedMessage = notification.Message;
+		return Task.CompletedTask;
+	}
+}
+
+file class RequestWithPostProcessingBehavior : IPipelineBehavior<RequestWithPostProcessing, Unit>
+{
+	public async Task<Unit> Handle(RequestWithPostProcessing notification, RequestHandlerDelegate<Unit> next, CancellationToken cancellationToken)
+	{
+		await next(cancellationToken);
+		notification.Message = "Mutated by post-processing behavior";
+
+		return Unit.Value;
 	}
 }
 

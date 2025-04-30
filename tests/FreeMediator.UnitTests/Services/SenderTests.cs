@@ -143,10 +143,10 @@ file class CommandHandler : IRequestHandler<CommandRequest>
 {
 	public static List<string> HandledMessages { get; } = [];
 
-	public Task<Unit> Handle(CommandRequest request, CancellationToken cancellationToken)
+	public Task Handle(CommandRequest request, CancellationToken cancellationToken)
 	{
 		HandledMessages.Add(request.Message);
-		return Unit.Task;
+		return Task.CompletedTask;
 	}
 }
 
@@ -158,16 +158,16 @@ file class MultiCommandHandler : IRequestHandler<FirstMultiCommand>, IRequestHan
 {
 	public static List<string> HandledMessages { get; } = [];
 
-	public Task<Unit> Handle(FirstMultiCommand command, CancellationToken cancellationToken)
+	public Task Handle(FirstMultiCommand command, CancellationToken cancellationToken)
 	{
 		HandledMessages.Add(command.Message);
-		return Unit.Task;
+		return Task.CompletedTask;
 	}
 
-	public Task<Unit> Handle(SecondMultiCommand command, CancellationToken cancellationToken)
+	public Task Handle(SecondMultiCommand command, CancellationToken cancellationToken)
 	{
 		HandledMessages.Add(command.Message);
-		return Unit.Task;
+		return Task.CompletedTask;
 	}
 }
 
@@ -196,10 +196,10 @@ file class MixedRequestHandler : IRequestHandler<MixedCommand>, IRequestHandler<
 {
 	public static List<string> HandledMessages { get; } = [];
 
-	public Task<Unit> Handle(MixedCommand request, CancellationToken cancellationToken)
+	public Task Handle(MixedCommand request, CancellationToken cancellationToken)
 	{
 		HandledMessages.Add(request.Message);
-		return Unit.Task;
+		return Task.CompletedTask;
 	}
 
 	public Task<string> Handle(MixedRequest request, CancellationToken cancellationToken)

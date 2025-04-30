@@ -36,11 +36,10 @@ public interface IRequestHandler<in TRequest> : IBaseRequestHandler
 {
 	/// <summary>
 	///     Handler logic for the request. Any exceptions thrown will not be caught by the framework.
-	///     Must return <see cref="Unit" /> to represent the lack of return value.
 	///     <param name="request">Request being sent through the mediator</param>
 	///     <param name="cancellationToken">CancellationToken</param>
 	/// </summary>
-	Task<Unit> Handle(TRequest request, CancellationToken cancellationToken);
+	Task Handle(TRequest request, CancellationToken cancellationToken);
 }
 
 #endregion
