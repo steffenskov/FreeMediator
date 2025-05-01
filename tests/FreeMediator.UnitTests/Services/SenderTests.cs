@@ -125,6 +125,49 @@ public class SenderTests
 		var handledMessage = Assert.Single(WrongHandler.HandledMessages);
 		Assert.Equal(request.Message, handledMessage);
 	}
+
+	[Fact]
+	public async Task Send_GenericRequestWithOtherArity_IsHandled()
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		services.AddMediator(config =>
+		{
+			((MediatorConfiguration)config).RegisterServices(typeof(GenericRequestHandlerWithOtherArity<>));
+		});
+
+		var serviceProvider = services.BuildServiceProvider();
+		var sender = serviceProvider.GetRequiredService<ISender>();
+
+		var request = new GenericRequest($"Hello world {Random.Shared.Next()}");
+
+		// Act
+		var result = await sender.Send(request);
+
+		// Assert
+		Assert.Equal(request.Message, result);
+	}
+
+	[Fact]
+	public async Task Send_GenericRequestWithSingularArity_IsHandled()
+	{
+		var services = new ServiceCollection();
+		services.AddMediator(config =>
+		{
+			((MediatorConfiguration)config).RegisterServices(typeof(GenericCommandHandler<>));
+		});
+
+		var serviceProvider = services.BuildServiceProvider();
+		var sender = serviceProvider.GetRequiredService<ISender>();
+
+		var request = new GenericCommand($"Hello world {Random.Shared.Next()}");
+
+		// Act
+		await sender.Send(request);
+
+		// Assert
+		Assert.Equal(request.Message, GenericCommandHandler.HandledMessage);
+	}
 }
 
 file record EchoRequest(string Message) : IRequest<string>;
@@ -229,5 +272,43 @@ file class WrongHandler : IRequestHandler<WrongHandlerCommand, Unit> // Should h
 	{
 		HandledMessages.Add(request.Message);
 		return Unit.Task;
+	}
+}
+
+file interface IGenericCommand : IRequest
+{
+	string Message { get; }
+}
+
+file record GenericCommand(string Message) : IGenericCommand;
+
+file abstract class GenericCommandHandler
+{
+	public static string? HandledMessage { get; protected set; }
+}
+
+file class GenericCommandHandler<TCommand> : GenericCommandHandler, IRequestHandler<TCommand>
+	where TCommand : IGenericCommand
+{
+	public Task Handle(TCommand request, CancellationToken cancellationToken)
+	{
+		HandledMessage = request.Message;
+		return Task.CompletedTask;
+	}
+}
+
+public interface IGenericRequest : IRequest<string>
+{
+	string Message { get; }
+}
+
+public record GenericRequest(string Message) : IGenericRequest;
+
+public class GenericRequestHandlerWithOtherArity<TRequest> : IRequestHandler<TRequest, string>
+	where TRequest : IGenericRequest
+{
+	public Task<string> Handle(TRequest request, CancellationToken cancellationToken)
+	{
+		return Task.FromResult(request.Message);
 	}
 }

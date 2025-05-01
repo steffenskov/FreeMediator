@@ -83,7 +83,7 @@ public class ServiceRegistrarTests
 	{
 		// Arrange
 		var registrar = new ServiceRegistrar(new ServiceCollection());
-		registrar.RegisterGenericNotificationHandler(typeof(SingleGenericArgumentType<>));
+		registrar.RegisterGenericNotificationHandler(typeof(SingleGenericNotificaitonHandler<>));
 
 		using var defaultEnumerator = registrar.GetEnumerator();
 
@@ -105,13 +105,42 @@ public class ServiceRegistrarTests
 	}
 
 	[Fact]
-	public void RegisterGenericRequestHandler_SingleGenericArgument_Throws()
+	public void RegisterGenericRequestHandler_SingleGenericArgument_Registers()
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		var registrar = new ServiceRegistrar(services);
+
+		// Act 
+		registrar.RegisterGenericRequestHandler(typeof(SingleGenericRequestHandler<>));
+
+		// Assert		 
+		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(SingleGenericRequestHandler<>));
+	}
+
+	[Fact]
+	public void RegisterGenericRequestHandler_DifferentArityWithNonPublicHandler_Throws()
 	{
 		// Arrange
 		var registrar = new ServiceRegistrar(new ServiceCollection());
 
 		// Act && Assert
-		Assert.Throws<NotImplementedException>(() => registrar.RegisterGenericRequestHandler(typeof(SingleGenericArgumentType<>)));
+		var ex = Assert.Throws<InvalidOperationException>(() => registrar.RegisterGenericRequestHandler(typeof(SingleGenericRequestHandlerWithDifferentArity<>)));
+		Assert.Equal("Generic request handlers with a single generic type argument, that implements IRequestHandler<,> must be public.", ex.Message);
+	}
+
+	[Fact]
+	public void RegisterGenericRequestHandler_DifferentArityWithPublicHandler_Registers()
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		var registrar = new ServiceRegistrar(services);
+
+		// Act
+		registrar.RegisterGenericRequestHandler(typeof(PublicSingleGenericRequestHandlerWithDifferentArity<>));
+
+		// Assert
+		Assert.Single(services, descriptor => descriptor.ServiceType == typeof(IRequestHandler<,>));
 	}
 
 	[Fact]
@@ -122,10 +151,10 @@ public class ServiceRegistrarTests
 		var registrar = new ServiceRegistrar(services);
 
 		// Act
-		registrar.RegisterGenericRequestHandler(typeof(TwoGenericArgumentType<,>));
+		registrar.RegisterGenericRequestHandler(typeof(TwoGenericRequestHandler<,>));
 
 		// Assert
-		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(TwoGenericArgumentType<,>));
+		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(TwoGenericRequestHandler<,>));
 	}
 
 	[Fact]
@@ -157,10 +186,10 @@ public class ServiceRegistrarTests
 		var registrar = new ServiceRegistrar(services);
 
 		// Act
-		registrar.RegisterGenericNotificationHandler(typeof(SingleGenericArgumentType<>));
+		registrar.RegisterGenericNotificationHandler(typeof(SingleGenericNotificaitonHandler<>));
 
 		// Assert
-		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(SingleGenericArgumentType<>));
+		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(SingleGenericNotificaitonHandler<>));
 	}
 
 	[Fact]
@@ -170,8 +199,8 @@ public class ServiceRegistrarTests
 		var registrar = new ServiceRegistrar(new ServiceCollection());
 
 		// Act && Assert
-		var ex = Assert.Throws<NotSupportedException>(() => registrar.RegisterGenericNotificationHandler(typeof(TwoGenericArgumentType<,>)));
-		Assert.Equal($"Generic notification handlers with more than 1 generic type arguments are not supported: {typeof(TwoGenericArgumentType<,>).Name}", ex.Message);
+		var ex = Assert.Throws<NotSupportedException>(() => registrar.RegisterGenericNotificationHandler(typeof(TwoGenericRequestHandler<,>)));
+		Assert.Equal($"Generic notification handlers with more than 1 generic type arguments are not supported: {typeof(TwoGenericRequestHandler<,>).Name}", ex.Message);
 	}
 }
 
@@ -187,19 +216,44 @@ file class OtherService : IService
 {
 }
 
-file class SingleGenericArgumentType<TNotification> : INotificationHandler<TNotification>
-	where TNotification : IRequestMarker, INotification
+public class PublicSingleGenericRequestHandlerWithDifferentArity<TRequest> : IRequestHandler<TRequest, string>
+	where TRequest : IRequest<string>
 {
-	public Task Handle(TNotification notification, CancellationToken cancellationToken)
+	public Task<string> Handle(TRequest request, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}
 }
 
-file class TwoGenericArgumentType<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
+file class SingleGenericRequestHandlerWithDifferentArity<TRequest> : IRequestHandler<TRequest, bool> where TRequest : IRequest<bool>
+{
+	public Task<bool> Handle(TRequest request, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+}
+
+file class SingleGenericRequestHandler<TRequest> : IRequestHandler<TRequest> where TRequest : IRequest
+{
+	public Task Handle(TRequest request, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+}
+
+file class TwoGenericRequestHandler<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
 	where TRequest : IRequestMarker, IRequest<TResponse>
 {
 	public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+}
+
+file class SingleGenericNotificaitonHandler<TNotification> : INotificationHandler<TNotification>
+	where TNotification : IRequestMarker, INotification
+{
+	public Task Handle(TNotification notification, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
 	}

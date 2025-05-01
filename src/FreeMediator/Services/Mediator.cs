@@ -1,6 +1,6 @@
 namespace FreeMediator;
 
-internal class Mediator : IMediator
+public class Mediator : IMediator
 {
 	private readonly IServiceProvider _serviceProvider;
 
