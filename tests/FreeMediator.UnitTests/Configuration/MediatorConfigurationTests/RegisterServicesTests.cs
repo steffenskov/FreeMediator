@@ -116,14 +116,16 @@ public partial class MediatorConfigurationTests
 	}
 
 	[Fact]
-	public void RegisterServices_RequestHandlerWithJustOneArgument_Throws()
+	public void RegisterServices_RequestHandlerWithJustOneArgument_Registers()
 	{
 		// Arrange
-		var (configuration, _) = CreateConfiguration();
+		var (configuration, services) = CreateConfiguration();
 
-		// Act && Assert
-		var ex = Assert.Throws<NotImplementedException>(() => configuration.RegisterServices(typeof(InvalidSingleArgumentGenericRequestHandler<>)));
-		Assert.Equal($"Generic request handlers with a single generic type argument is not yet supported: {typeof(InvalidSingleArgumentGenericRequestHandler<>).Name}", ex.Message);
+		// Act
+		configuration.RegisterServices(typeof(InvalidSingleArgumentGenericRequestHandler<>));
+
+		// Assert
+		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(InvalidSingleArgumentGenericRequestHandler<>));
 	}
 
 	[Fact]

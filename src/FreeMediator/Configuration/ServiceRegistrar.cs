@@ -44,8 +44,28 @@ internal class ServiceRegistrar : IServiceRegistrar
 		switch (genericArgumentTypeCount)
 		{
 			case 0: throw new UnreachableException($"Generic type must have at least one argument: {type.Name}");
-			case 1: // TODO: Wrap in handler with 2 args
-				throw new NotImplementedException($"Generic request handlers with a single generic type argument is not yet supported: {type.Name}");
+			case 1:
+				var genericInterfaceType = type.GetRequestHandlerInterface();
+
+				var interfaceArguments = genericInterfaceType.InterfaceType.GetGenericArguments();
+				if (interfaceArguments.Length == genericArgumentTypeCount)
+				{
+					AddDistinctImplementation(genericInterfaceType.GenericTypeDefinition, type);
+				}
+				else
+				{
+					try
+					{
+						var wrapperType = RequestHandlerWrapperGenerator.GenerateImplementationType(type, genericInterfaceType.InterfaceType);
+						AddDistinctImplementation(genericInterfaceType.GenericTypeDefinition, wrapperType);
+					}
+					catch (TypeLoadException)
+					{
+						throw new InvalidOperationException("Generic request handlers with a single generic type argument, that implements IRequestHandler<,> must be public.");
+					}
+				}
+
+				break;
 			case 2:
 				AddDistinctImplementation(typeof(IRequestHandler<,>), type);
 				break;

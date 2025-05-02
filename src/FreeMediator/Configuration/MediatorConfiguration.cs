@@ -166,7 +166,7 @@ internal class MediatorConfiguration : IMediatorConfiguration
 		}
 
 		if (!type.IsAssignableTo(typeof(IBaseRequestHandler)) && !type.IsAssignableTo(typeof(IBaseNotificationHandler)))
-		{
+		{ 
 			return;
 		}
 

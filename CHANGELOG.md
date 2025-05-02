@@ -10,6 +10,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Guide for migrating from MediatR to FreeMediator
 
+## [1.2.0] - 2025-05-02
+
+### Added
+
+- Support for generic `IRequestHandlers` of partial arity match, meaning these are now all valid:
+
+`class MyHandler<TRequest> : IRequestHandler<TRequest>`
+`class MyHandler<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>`
+`public class MyHandler<TResponse> : IRequestHandler<FIXED_REQUEST, TResponse>`
+`public class MyHandler<TRequest> : IRequestHandler<TRequest, FIXED_RESPONSE>`
+
+The latter two deserves a few extra words. It allows you to specify a generic constraint for `TRequest` or `TResponse` and keep the other fixed.
+This is useful in quite a few scenarios in my experience, and not outright supported in MediatR.
+
+The solution here DOES come with a caveat: You handler MUST BE PUBLIC! This is because I'm using Reflection to wrap the handler in something with the same generic arity as `IRequestHandler<TRequest, TResponse>` and this requires the handler to be public.
+
 
 ## [1.1.1] - 2025-04-30
 

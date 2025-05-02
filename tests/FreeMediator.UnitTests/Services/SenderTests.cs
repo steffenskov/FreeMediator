@@ -125,6 +125,110 @@ public class SenderTests
 		var handledMessage = Assert.Single(WrongHandler.HandledMessages);
 		Assert.Equal(request.Message, handledMessage);
 	}
+
+	[Fact]
+	public async Task Send_GenericRequestWithOnlyGenericRequestPart_IsHandled()
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		services.AddMediator(config =>
+		{
+			((MediatorConfiguration)config).RegisterServices(typeof(GenericRequestHandlerWithOnlyGenericRequestPart<>));
+		});
+
+		var serviceProvider = services.BuildServiceProvider();
+		var sender = serviceProvider.GetRequiredService<ISender>();
+
+		var request = new GenericRequest($"Hello world {Random.Shared.Next()}");
+
+		// Act
+		var result = await sender.Send(request);
+
+		// Assert
+		Assert.Equal(request.Message, result);
+	}
+
+	[Fact]
+	public async Task Send_GenericRequestWithOnlyGenericResponsePart_IsHandled()
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		services.AddMediator(config =>
+		{
+			((MediatorConfiguration)config).RegisterServices(typeof(GenericRequestHandlerWithOnlyGenericResponsePart<>));
+		});
+
+		var serviceProvider = services.BuildServiceProvider();
+		var sender = serviceProvider.GetRequiredService<ISender>();
+
+		var request = new GenericResponseRequest<string>($"Hello world {Random.Shared.Next()}");
+
+		// Act
+		var result = await sender.Send(request);
+
+		// Assert
+		Assert.Equal(request.Message, result);
+	}
+
+	[Fact]
+	public async Task Send_GenericRequestWithSingularArity_IsHandled()
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		services.AddMediator(config =>
+		{
+			((MediatorConfiguration)config).RegisterServices(typeof(GenericCommandHandler<>));
+		});
+
+		var serviceProvider = services.BuildServiceProvider();
+		var sender = serviceProvider.GetRequiredService<ISender>();
+
+		var request = new GenericCommand($"Hello world {Random.Shared.Next()}");
+
+		// Act
+		await sender.Send(request);
+
+		// Assert
+		Assert.Equal(request.Message, GenericCommandHandler.HandledMessage);
+	}
+
+	[Fact]
+	public async Task Send_RequestWithMultipleHandlers_Throws()
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		services.AddMediator(config =>
+		{
+			((MediatorConfiguration)config).RegisterServices(typeof(OpenRequestHandler1<,>), typeof(OpenRequestHandler2<,>));
+		});
+
+		var serviceProvider = services.BuildServiceProvider();
+		var sender = serviceProvider.GetRequiredService<ISender>();
+
+		// Act && Assert
+		var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await sender.Send(new RequestWithMultipleHandlers("Hello world")));
+
+		Assert.StartsWith("Multiple handlers found for the same request, most likely you have a generic handler without generic constraints somewhere. The handlers are:", ex.Message);
+	}
+
+	[Fact]
+	public async Task Send_CommandWithMultipleHandlers_Throws()
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		services.AddMediator(config =>
+		{
+			((MediatorConfiguration)config).RegisterServices(typeof(OpenCommandHandler1<>), typeof(OpenCommandHandler2<>));
+		});
+
+		var serviceProvider = services.BuildServiceProvider();
+		var sender = serviceProvider.GetRequiredService<ISender>();
+
+		// Act && Assert
+		var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await sender.Send(new CommandWithMultipleHandlers()));
+
+		Assert.StartsWith("Multiple handlers found for the same request, most likely you have a generic handler without generic constraints somewhere. The handlers are:", ex.Message);
+	}
 }
 
 file record EchoRequest(string Message) : IRequest<string>;
@@ -229,5 +333,101 @@ file class WrongHandler : IRequestHandler<WrongHandlerCommand, Unit> // Should h
 	{
 		HandledMessages.Add(request.Message);
 		return Unit.Task;
+	}
+}
+
+file interface IGenericCommand : IRequest
+{
+	string Message { get; }
+}
+
+file record GenericCommand(string Message) : IGenericCommand;
+
+file abstract class GenericCommandHandler
+{
+	public static string? HandledMessage { get; protected set; }
+}
+
+file class GenericCommandHandler<TCommand> : GenericCommandHandler, IRequestHandler<TCommand>
+	where TCommand : IGenericCommand
+{
+	public Task Handle(TCommand request, CancellationToken cancellationToken)
+	{
+		HandledMessage = request.Message;
+		return Task.CompletedTask;
+	}
+}
+
+public interface IGenericRequest : IRequest<string>
+{
+	string Message { get; }
+}
+
+public record GenericRequest(string Message) : IGenericRequest;
+
+public class GenericRequestHandlerWithOnlyGenericRequestPart<TRequest> : IRequestHandler<TRequest, string>
+	where TRequest : IGenericRequest
+{
+	public Task<string> Handle(TRequest request, CancellationToken cancellationToken)
+	{
+		return Task.FromResult(request.Message);
+	}
+}
+
+public interface IGenericRequest<out T> : IRequest<T>
+{
+	T Message { get; }
+}
+
+public record GenericResponseRequest<T>(T Message) : IGenericRequest<T>;
+
+public class GenericRequestHandlerWithOnlyGenericResponsePart<TResponse> : IRequestHandler<GenericResponseRequest<TResponse>, TResponse>
+{
+	public Task<TResponse> Handle(GenericResponseRequest<TResponse> request, CancellationToken cancellationToken)
+	{
+		return Task.FromResult(request.Message);
+	}
+}
+
+internal record RequestWithMultipleHandlers(string Message) : IRequestWithMultipleHandlers<string>;
+
+internal interface IRequestWithMultipleHandlers<TResponse> : IRequest<TResponse>;
+
+internal class OpenRequestHandler1<TRequest, TResponse> : IRequestHandler<TRequest, TResponse> where TRequest : IRequestWithMultipleHandlers<TResponse>
+{
+	public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+}
+
+internal class OpenRequestHandler2<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
+	where TRequest : IRequestWithMultipleHandlers<TResponse>
+{
+	public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+}
+
+internal record CommandWithMultipleHandlers : ICommandWithMultipleHandlers;
+
+internal interface ICommandWithMultipleHandlers : IRequest;
+
+internal class OpenCommandHandler1<TRequest> : IRequestHandler<TRequest>
+	where TRequest : ICommandWithMultipleHandlers
+{
+	public Task Handle(TRequest request, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
+	}
+}
+
+internal class OpenCommandHandler2<TRequest> : IRequestHandler<TRequest>
+	where TRequest : ICommandWithMultipleHandlers
+{
+	public Task Handle(TRequest request, CancellationToken cancellationToken)
+	{
+		throw new NotImplementedException();
 	}
 }
