@@ -18,18 +18,51 @@ static internal class RequestHandlerWrapperGenerator
 	/// <summary>
 	///     Generates a wrapper class for the request handler and returns an instance of it.
 	/// </summary>
-	public static Type GenerateImplementationType(Type type)
+	public static Type GenerateImplementationType(Type type, Type genericInterfaceType)
 	{
 		var tb = _moduleBuilder.DefineType($"{type.Name}Wrapper{GenerateStrippedGuid()}", TypeAttributes.NotPublic);
+
+		var genericInterfaceArguments = genericInterfaceType.GetGenericArguments();
+		if (genericInterfaceArguments.Length != 2)
+		{
+			throw new InvalidOperationException($"Cannot wrap type {type.Name} as it doesn't seem to implement IRequestHandler<,>");
+		}
+
+		var isGenericRequest = genericInterfaceArguments[0].IsGenericParameter;
+		var isGenericResponse = genericInterfaceArguments[1].IsGenericParameter;
+
+		if (isGenericRequest && isGenericResponse)
+		{
+			throw new InvalidOperationException($"Cannot wrap type {type.Name} as it already has both generic type arguments");
+		}
+
+		if (!isGenericRequest && !isGenericResponse)
+		{
+			throw new InvalidOperationException($"Cannot wrap type {type.Name} as it has no generic type arguments");
+		}
 
 		var baseGenericType = type.GetGenericTypeDefinition();
 
 		var genericParams = tb.DefineGenericParameters("TRequest", "TResponse");
-		var tRequest = genericParams[0];
 
-		tRequest.SetInterfaceConstraints(baseGenericType.GetGenericArguments()[0].GetGenericParameterConstraints());
+		Type baseType;
+		if (isGenericRequest)
+		{
+			var tRequest = genericParams[0];
 
-		var baseType = baseGenericType.MakeGenericType(tRequest);
+			tRequest.SetInterfaceConstraints(baseGenericType.GetGenericArguments()[0].GetGenericParameterConstraints());
+
+			baseType = baseGenericType.MakeGenericType(tRequest);
+		}
+		else // Must be generic Response, due to the sanity checks above
+		{
+			var tResponse = genericParams[1];
+
+			tResponse.SetInterfaceConstraints(baseGenericType.GetGenericArguments()[0].GetGenericParameterConstraints());
+
+			baseType = baseGenericType.MakeGenericType(tResponse);
+		}
+
 		tb.SetParent(baseType);
 
 		return tb.CreateType();

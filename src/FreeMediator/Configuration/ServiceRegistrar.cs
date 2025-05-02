@@ -56,12 +56,11 @@ internal class ServiceRegistrar : IServiceRegistrar
 				{
 					try
 					{
-						var wrapperType = RequestHandlerWrapperGenerator.GenerateImplementationType(type);
+						var wrapperType = RequestHandlerWrapperGenerator.GenerateImplementationType(type, genericInterfaceType.InterfaceType);
 						AddDistinctImplementation(genericInterfaceType.GenericTypeDefinition, wrapperType);
 					}
-					catch (TypeLoadException ex)
+					catch (TypeLoadException)
 					{
-						Console.WriteLine(ex.Message);
 						throw new InvalidOperationException("Generic request handlers with a single generic type argument, that implements IRequestHandler<,> must be public.");
 					}
 				}
