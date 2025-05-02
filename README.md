@@ -14,7 +14,7 @@ As such the first version only deals with the basic stuff:
 - Sending requests and receiving responses
 - Pipeline behavior support for requests (both open and closed behaviors)
 - Publishing notifications
-- Generic request handlers of same arity as IRequestHandler<>, IRequestHandler<,> or IRequestHandler<,TYPE> (the last being partial arity match, check [changelog v.1.2.0](CHANGELOG.md#120---2025-05-01) for details)
+- Generic request handlers of same arity as IRequestHandler<>, IRequestHandler<,>, IRequestHandler<,FIXED_TYPE> OR IRequestHandler<FIXED_TYPE,> (the last two being partial arity match, check [changelog v.1.2.0](CHANGELOG.md#120---2025-05-02) for details)
 - Generic notification handlers of same arity as INotificationHandler<>
 
 Feel free to send a PR if you want to add any missing features, (make sure to read [CONTRIBUTING.md](CONTRIBUTING.md)
