@@ -71,7 +71,6 @@ public partial class MediatorConfigurationTests
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeNotificationHandler));
 	}
 
-
 	[Fact]
 	public void RegisterServices_SameNotificationHandlerTwice_Throws()
 	{
@@ -149,6 +148,32 @@ public partial class MediatorConfigurationTests
 		var ex = Assert.Throws<NotSupportedException>(() => configuration.RegisterServices(typeof(InvalidGenericNotificationHandler<,>)));
 		Assert.Equal($"Generic notification handlers with more than 1 generic type arguments are not supported: {typeof(InvalidGenericNotificationHandler<,>).Name}", ex.Message);
 	}
+
+	[Fact]
+	public void RegisterServices_AbstractClass_NotRegistered()
+	{
+		// Arrange
+		var (configuration, services) = CreateConfiguration();
+
+		// Act
+		configuration.RegisterServices(typeof(AbstractHandler<>));
+
+		// Assert
+		Assert.Empty(services);
+	}
+
+	[Fact]
+	public void RegisterServices_Interface_NotRegistered()
+	{
+		// Arrange
+		var (configuration, services) = CreateConfiguration();
+
+		// Act
+		configuration.RegisterServices(typeof(InterfaceHandler<>));
+
+		// Assert
+		Assert.Empty(services);
+	}
 }
 
 file class FakeCommand : IRequest;
@@ -222,4 +247,15 @@ file class InvalidTripleArgumentGenericRequestHandler<TRequest, TResponse, T> : 
 	{
 		throw new NotImplementedException();
 	}
+}
+
+file abstract class AbstractHandler<TRequest> : IRequestHandler<TRequest> 
+	where TRequest : IRequest
+{
+	public abstract Task Handle(TRequest request, CancellationToken cancellationToken);
+}
+
+file interface InterfaceHandler<TRequest> : IRequestHandler<TRequest> where TRequest : IRequest
+{
+	
 }
