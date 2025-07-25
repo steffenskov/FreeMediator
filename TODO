@@ -1,0 +1,1 @@
+- Add support for ignoring certain open types, so the auto registration doesn't throw on these.
