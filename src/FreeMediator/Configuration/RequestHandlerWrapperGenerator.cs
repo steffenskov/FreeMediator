@@ -1,4 +1,5 @@
 using System.Reflection.Emit;
+using FreeMediator.Exceptions;
 
 namespace FreeMediator.Configuration;
 
@@ -38,7 +39,7 @@ static internal class RequestHandlerWrapperGenerator
 
 		if (!isGenericRequest && !isGenericResponse)
 		{
-			throw new InvalidOperationException($"Cannot wrap type {type.Name} as it has no generic type arguments");
+			throw new UnmappableHandlerException(type);
 		}
 
 		var baseGenericType = type.GetGenericTypeDefinition();

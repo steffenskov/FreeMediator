@@ -229,6 +229,30 @@ public class SenderTests
 
 		Assert.StartsWith("Multiple handlers found for the same request, most likely you have a generic handler without generic constraints somewhere. The handlers are:", ex.Message);
 	}
+
+	[Theory]
+	[InlineData("Hello world", true)]
+	[InlineData(null, false)]
+	public async Task Send_GenericNestedRequest_IsHandled(string? value, bool notNull)
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		services.AddMediator(config =>
+		{
+			((MediatorConfiguration)config).RegisterServices(typeof(NestedGenericHandler<string>));
+		});
+
+		var serviceProvider = services.BuildServiceProvider();
+		var sender = serviceProvider.GetRequiredService<ISender>();
+
+		var request = new GenericRequest<string?>(value);
+
+		// Act
+		var result = await sender.Send(request);
+
+		// Assert
+		Assert.Equal(notNull, result);
+	}
 }
 
 file record EchoRequest(string Message) : IRequest<string>;
@@ -429,5 +453,16 @@ internal class OpenCommandHandler2<TRequest> : IRequestHandler<TRequest>
 	public Task Handle(TRequest request, CancellationToken cancellationToken)
 	{
 		throw new NotImplementedException();
+	}
+}
+
+public record GenericRequest<T>(T Value) : IRequest<bool>;
+
+public class NestedGenericHandler<T> : IRequestHandler<GenericRequest<T>, bool>
+{
+	public async Task<bool> Handle(GenericRequest<T> request, CancellationToken cancellationToken)
+	{
+		await Task.CompletedTask;
+		return request.Value is not null;
 	}
 }

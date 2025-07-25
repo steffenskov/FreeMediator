@@ -58,4 +58,11 @@ public interface IMediatorConfiguration
 	///     Registers all request- and notification handlers from the specified assembly.
 	/// </summary>
 	IMediatorConfiguration RegisterServicesFromAssembly(Assembly assembly);
+
+	/// <summary>
+	///     Manually register an IRequestHandler or INotificationHandler.
+	///     Useful for registering closed versions of generic handlers that cannot be auto-registered (you'll notice them as
+	///     they throw UnmappableHandlerException)
+	/// </summary>
+	IMediatorConfiguration RegisterServices(params IEnumerable<Type> types);
 }
