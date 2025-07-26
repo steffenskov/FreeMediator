@@ -5,7 +5,7 @@ namespace FreeMediator.Exceptions;
 /// </summary>
 public class UnmappableHandlerException : Exception
 {
-	public UnmappableHandlerException(Type type) : base($"Cannot wrap type {type.Name} as its IRequestHandler definition has no generic type arguments")
+	public UnmappableHandlerException(string message) : base(message)
 	{
 	}
 }

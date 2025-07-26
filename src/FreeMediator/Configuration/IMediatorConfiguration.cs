@@ -65,4 +65,13 @@ public interface IMediatorConfiguration
 	///     they throw UnmappableHandlerException)
 	/// </summary>
 	IMediatorConfiguration RegisterServices(params IEnumerable<Type> types);
+
+	/// <summary>
+	///     Explicitly ignore an IRequestHandler or INotificationHandler for auto registration.
+	///     Useful for dealing with partially closed generic types, like e.g. &lt;IRequestHandler&lt;MyGenericType&lt;T&gt;,
+	///     bool&gt;&gt; that cannot be auto-mapped.
+	///     Instead ignore them with this method, and do manual registration using <see cref="RegisterServices" />
+	/// </summary>
+	/// <param name="type">OPEN type description of the handler type to ignore</param>
+	IMediatorConfiguration IgnoreService(Type type);
 }

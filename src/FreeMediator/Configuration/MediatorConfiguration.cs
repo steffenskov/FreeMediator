@@ -2,11 +2,24 @@ namespace FreeMediator.Configuration;
 
 internal class MediatorConfiguration : IMediatorConfiguration
 {
+	private readonly HashSet<Type> _ignoredTypes = [];
 	private readonly IServiceRegistrar _services;
 
 	internal MediatorConfiguration(IServiceRegistrar services)
 	{
 		_services = services;
+	}
+
+	public IMediatorConfiguration IgnoreService(Type type)
+	{
+		if (type is { IsGenericType: true, IsGenericTypeDefinition: false })
+		{
+			throw new ArgumentException($"{nameof(type)} must be a generic type definition", nameof(type));
+		}
+
+		_ignoredTypes.Add(type);
+
+		return this;
 	}
 
 	#region AddOpenBehavior
@@ -141,6 +154,11 @@ internal class MediatorConfiguration : IMediatorConfiguration
 		var types = assembly.GetTypes();
 		foreach (var type in types)
 		{
+			if (_ignoredTypes.Contains(type))
+			{
+				continue;
+			}
+
 			TryRegisterType(type);
 		}
 
