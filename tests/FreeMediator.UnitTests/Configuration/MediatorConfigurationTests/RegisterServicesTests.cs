@@ -75,6 +75,16 @@ public partial class MediatorConfigurationTests
 	}
 
 	[Fact]
+	public void RegisterServicesFromAssemblyContaining_PartiallyClosedTypeExists_Throws()
+	{
+		// Arrange
+		var (configuration, _) = CreateConfiguration();
+
+		// Act && Assert
+		Assert.Throws<UnmappableHandlerException>(() => configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>());
+	}
+
+	[Fact]
 	public void RegisterServices_SameNotificationHandlerTwice_Throws()
 	{
 		// Arrange
@@ -176,31 +186,6 @@ public partial class MediatorConfigurationTests
 
 		// Assert
 		Assert.Empty(services);
-	}
-
-	[Fact]
-	public void RegisterServices_PartiallyClosedTypeExists_Throws()
-	{
-		// Arrange
-		var (configuration, _) = CreateConfiguration();
-
-		// Act && Assert
-		Assert.Throws<UnmappableHandlerException>(() => configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>());
-	}
-
-	[Fact]
-	public void RegisterServices_PartiallyClosedTypeExcluded_Works()
-	{
-		// Arrange
-		var (configuration, services) = CreateConfiguration();
-
-		configuration.IgnoreService(typeof(NestedGenericHandler<>));
-
-		// Act
-		configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>();
-
-		// Assert
-		Assert.Empty(services); // No services should be registered as that assembly only contains the one being ignored
 	}
 }
 

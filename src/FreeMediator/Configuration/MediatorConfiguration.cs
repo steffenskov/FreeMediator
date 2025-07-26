@@ -17,6 +17,11 @@ internal class MediatorConfiguration : IMediatorConfiguration
 			throw new ArgumentException($"{nameof(type)} must be a generic type definition", nameof(type));
 		}
 
+		if (!type.IsAssignableTo(typeof(IBaseRequestHandler)) && !type.IsAssignableTo(typeof(IBaseNotificationHandler)))
+		{
+			throw new ArgumentException($"{nameof(type)} must be an IRequestHandler or INotificationHandler", nameof(type));
+		}
+
 		_ignoredTypes.Add(type);
 
 		return this;
