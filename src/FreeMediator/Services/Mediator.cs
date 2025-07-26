@@ -110,7 +110,7 @@ public class Mediator : IMediator
 	{
 		var services = _serviceProvider.GetServices(type).ToList();
 
-		return GetSingle(services) ??
+		return GetSingle(services, type) ??
 		       throw new UnreachableException("Service is registered as null, this should never happen. Please report an issue on https://github.com/steffenskov/FreeMediator/issues");
 	}
 
@@ -119,6 +119,23 @@ public class Mediator : IMediator
 		if (services.Count == 0)
 		{
 			throw new InvalidOperationException($"No handler found of type {typeof(T).Name}");
+		}
+
+		if (services.Count > 1)
+		{
+			var serviceNames = string.Join(Environment.NewLine, services.Select(service => service!.GetType().FullName));
+			throw new InvalidOperationException(
+				$"Multiple handlers found for the same request, most likely you have a generic handler without generic constraints somewhere. The handlers are:{Environment.NewLine}{serviceNames}");
+		}
+
+		return services[0];
+	}
+
+	private static object? GetSingle(IList<object?> services, Type type)
+	{
+		if (services.Count == 0)
+		{
+			throw new InvalidOperationException($"No handler found of type {type.Name}");
 		}
 
 		if (services.Count > 1)

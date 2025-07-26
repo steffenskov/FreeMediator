@@ -1,3 +1,5 @@
+using FreeMediator.ManualHandlerRegistration;
+
 namespace FreeMediator.UnitTests.Services;
 
 public class SenderTests
@@ -228,6 +230,30 @@ public class SenderTests
 		var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await sender.Send(new CommandWithMultipleHandlers()));
 
 		Assert.StartsWith("Multiple handlers found for the same request, most likely you have a generic handler without generic constraints somewhere. The handlers are:", ex.Message);
+	}
+
+	[Theory]
+	[InlineData("Hello world", true)]
+	[InlineData(null, false)]
+	public async Task Send_GenericNestedRequest_IsHandled(string? value, bool notNull)
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		services.AddMediator(config =>
+		{
+			((MediatorConfiguration)config).RegisterServices(typeof(NestedGenericHandler<string>));
+		});
+
+		var serviceProvider = services.BuildServiceProvider();
+		var sender = serviceProvider.GetRequiredService<ISender>();
+
+		var request = new GenericRequest<string?>(value);
+
+		// Act
+		var result = await sender.Send(request);
+
+		// Assert
+		Assert.Equal(notNull, result);
 	}
 }
 

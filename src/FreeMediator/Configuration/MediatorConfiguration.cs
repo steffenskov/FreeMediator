@@ -2,11 +2,29 @@ namespace FreeMediator.Configuration;
 
 internal class MediatorConfiguration : IMediatorConfiguration
 {
+	private readonly HashSet<Type> _ignoredTypes = [];
 	private readonly IServiceRegistrar _services;
 
 	internal MediatorConfiguration(IServiceRegistrar services)
 	{
 		_services = services;
+	}
+
+	public IMediatorConfiguration IgnoreService(Type type)
+	{
+		if (type is { IsGenericType: true, IsGenericTypeDefinition: false })
+		{
+			throw new ArgumentException($"{nameof(type)} must be a generic type definition", nameof(type));
+		}
+
+		if (!type.IsAssignableTo(typeof(IBaseRequestHandler)) && !type.IsAssignableTo(typeof(IBaseNotificationHandler)))
+		{
+			throw new ArgumentException($"{nameof(type)} must be an IRequestHandler or INotificationHandler", nameof(type));
+		}
+
+		_ignoredTypes.Add(type);
+
+		return this;
 	}
 
 	#region AddOpenBehavior
@@ -43,7 +61,9 @@ internal class MediatorConfiguration : IMediatorConfiguration
 
 		if (implementationType.GetGenericArguments().Length != implementedInterface.GetGenericArguments().Length)
 		{
-			throw new ArgumentException($"{nameof(implementationType)} must take the same number of type arguments (have the same arity) as the IPipelineBehavior<> or IPipelineBehavior<,> interface implemented.", nameof(implementationType));
+			throw new ArgumentException(
+				$"{nameof(implementationType)} must take the same number of type arguments (have the same arity) as the IPipelineBehavior<> or IPipelineBehavior<,> interface implemented.",
+				nameof(implementationType));
 		}
 
 		if (_services.All(x => x.ServiceType != implementationType))
@@ -139,16 +159,19 @@ internal class MediatorConfiguration : IMediatorConfiguration
 		var types = assembly.GetTypes();
 		foreach (var type in types)
 		{
+			if (_ignoredTypes.Contains(type))
+			{
+				continue;
+			}
+
 			TryRegisterType(type);
 		}
 
 		return this;
 	}
 
-	/// <summary>
-	///     Internal method only used to simplify testing
-	/// </summary>
-	internal MediatorConfiguration RegisterServices(params IEnumerable<Type> types)
+
+	public IMediatorConfiguration RegisterServices(params IEnumerable<Type> types)
 	{
 		foreach (var type in types)
 		{
@@ -166,12 +189,11 @@ internal class MediatorConfiguration : IMediatorConfiguration
 		}
 
 		if (!type.IsAssignableTo(typeof(IBaseRequestHandler)) && !type.IsAssignableTo(typeof(IBaseNotificationHandler)))
-		{ 
+		{
 			return;
 		}
 
-
-		if (type.IsGenericType)
+		if (type.IsGenericType && type.GetGenericArguments().Any(argumentType => argumentType.IsGenericTypeParameter))
 		{
 			RegisterGenericType(type);
 		}

@@ -1,3 +1,5 @@
+using FreeMediator.Exceptions;
+
 namespace FreeMediator.UnitTests.Configuration;
 
 public partial class RequestHandlerWrapperGeneratorTests
@@ -38,7 +40,7 @@ public partial class RequestHandlerWrapperGeneratorTests
 		var interfaceType = type.GetInterfaces()[0];
 
 		// Act && Assert
-		var ex = Assert.Throws<InvalidOperationException>(() => RequestHandlerWrapperGenerator.GenerateImplementationType(type, interfaceType));
+		var ex = Assert.Throws<UnmappableHandlerException>(() => RequestHandlerWrapperGenerator.GenerateImplementationType(type, interfaceType));
 
 		Assert.Equal($"Cannot wrap type {type.Name} as it doesn't seem to implement IRequestHandler<,>", ex.Message);
 	}
@@ -51,9 +53,9 @@ public partial class RequestHandlerWrapperGeneratorTests
 		var interfaceType = type.GetInterfaces()[0];
 
 		// Act && Assert
-		var ex = Assert.Throws<InvalidOperationException>(() => RequestHandlerWrapperGenerator.GenerateImplementationType(type, interfaceType));
+		var ex = Assert.Throws<UnmappableHandlerException>(() => RequestHandlerWrapperGenerator.GenerateImplementationType(type, interfaceType));
 
-		Assert.Equal($"Cannot wrap type {type.Name} as it has no generic type arguments", ex.Message);
+		Assert.Equal($"Cannot wrap type {type.Name} as its IRequestHandler definition has no generic type arguments", ex.Message);
 	}
 
 	[Fact]
@@ -64,7 +66,7 @@ public partial class RequestHandlerWrapperGeneratorTests
 		var interfaceType = type.GetInterfaces()[0];
 
 		// Act && Assert
-		var ex = Assert.Throws<InvalidOperationException>(() => RequestHandlerWrapperGenerator.GenerateImplementationType(type, interfaceType));
+		var ex = Assert.Throws<UnmappableHandlerException>(() => RequestHandlerWrapperGenerator.GenerateImplementationType(type, interfaceType));
 
 		Assert.Equal($"Cannot wrap type {type.Name} as it already has both generic type arguments", ex.Message);
 	}

@@ -1,3 +1,6 @@
+using FreeMediator.Exceptions;
+using FreeMediator.ManualHandlerRegistration;
+
 namespace FreeMediator.UnitTests.Configuration.MediatorConfigurationTests;
 
 public partial class MediatorConfigurationTests
@@ -69,6 +72,16 @@ public partial class MediatorConfigurationTests
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeCommandHandler));
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeRequestHandler));
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeNotificationHandler));
+	}
+
+	[Fact]
+	public void RegisterServicesFromAssemblyContaining_PartiallyClosedTypeExists_Throws()
+	{
+		// Arrange
+		var (configuration, _) = CreateConfiguration();
+
+		// Act && Assert
+		Assert.Throws<UnmappableHandlerException>(() => configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>());
 	}
 
 	[Fact]
@@ -249,7 +262,7 @@ file class InvalidTripleArgumentGenericRequestHandler<TRequest, TResponse, T> : 
 	}
 }
 
-file abstract class AbstractHandler<TRequest> : IRequestHandler<TRequest> 
+file abstract class AbstractHandler<TRequest> : IRequestHandler<TRequest>
 	where TRequest : IRequest
 {
 	public abstract Task Handle(TRequest request, CancellationToken cancellationToken);
@@ -257,5 +270,4 @@ file abstract class AbstractHandler<TRequest> : IRequestHandler<TRequest>
 
 file interface InterfaceHandler<TRequest> : IRequestHandler<TRequest> where TRequest : IRequest
 {
-	
 }

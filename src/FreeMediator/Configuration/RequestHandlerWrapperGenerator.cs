@@ -1,4 +1,5 @@
 using System.Reflection.Emit;
+using FreeMediator.Exceptions;
 
 namespace FreeMediator.Configuration;
 
@@ -25,7 +26,7 @@ static internal class RequestHandlerWrapperGenerator
 		var genericInterfaceArguments = genericInterfaceType.GetGenericArguments();
 		if (genericInterfaceArguments.Length != 2)
 		{
-			throw new InvalidOperationException($"Cannot wrap type {type.Name} as it doesn't seem to implement IRequestHandler<,>");
+			throw new UnmappableHandlerException($"Cannot wrap type {type.Name} as it doesn't seem to implement IRequestHandler<,>");
 		}
 
 		var isGenericRequest = genericInterfaceArguments[0].IsGenericParameter;
@@ -33,12 +34,12 @@ static internal class RequestHandlerWrapperGenerator
 
 		if (isGenericRequest && isGenericResponse)
 		{
-			throw new InvalidOperationException($"Cannot wrap type {type.Name} as it already has both generic type arguments");
+			throw new UnmappableHandlerException($"Cannot wrap type {type.Name} as it already has both generic type arguments");
 		}
 
 		if (!isGenericRequest && !isGenericResponse)
 		{
-			throw new InvalidOperationException($"Cannot wrap type {type.Name} as it has no generic type arguments");
+			throw new UnmappableHandlerException($"Cannot wrap type {type.Name} as its IRequestHandler definition has no generic type arguments");
 		}
 
 		var baseGenericType = type.GetGenericTypeDefinition();
