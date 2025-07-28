@@ -10,7 +10,7 @@ public partial class MediatorConfigurationTests
 		// Arrange
 		var (configuration, services) = CreateConfiguration();
 
-		configuration.IgnoreService(typeof(NestedGenericHandler<>));
+		configuration.IgnoreServices(typeof(NestedGenericHandler<>));
 
 		// Act
 		configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>();
@@ -25,8 +25,8 @@ public partial class MediatorConfigurationTests
 		// Arrange
 		var (configuration, services) = CreateConfiguration();
 
-		configuration.IgnoreService(typeof(NestedGenericHandler<>)); // Must also be ignored to avoid exceptions
-		configuration.IgnoreService(typeof(GenericNotificationHandler<>));
+		configuration.IgnoreServices(typeof(NestedGenericHandler<>)); // Must also be ignored to avoid exceptions
+		configuration.IgnoreServices(typeof(GenericNotificationHandler<>));
 
 		// Act
 		configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>();
@@ -36,12 +36,28 @@ public partial class MediatorConfigurationTests
 	}
 
 	[Fact]
+	public void RegisterServicesFromAssemblyContaining_IgnoredViaPredicate_NotRegistered()
+	{
+		// Arrange
+		var (configuration, services) = CreateConfiguration();
+
+		configuration.IgnoreServices(type => type.IsGenericType);
+
+		// Act
+		configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>();
+
+		// Assert
+		Assert.DoesNotContain(services, service => service.ImplementationType == typeof(NestedGenericHandler<>));
+		Assert.DoesNotContain(services, service => service.ImplementationType == typeof(GenericNotificationHandler<>));
+	}
+
+	[Fact]
 	public void RegisterServices_IgnoredRequestHandler_Registered()
 	{
 		// Arrange
 		var (configuration, services) = CreateConfiguration();
 
-		configuration.IgnoreService(typeof(NestedGenericHandler<>));
+		configuration.IgnoreServices(typeof(NestedGenericHandler<>));
 
 		// Act
 		configuration.RegisterServices(typeof(NestedGenericHandler<string>));
@@ -56,7 +72,7 @@ public partial class MediatorConfigurationTests
 		// Arrange
 		var (configuration, services) = CreateConfiguration();
 
-		configuration.IgnoreService(typeof(GenericNotificationHandler<>));
+		configuration.IgnoreServices(typeof(GenericNotificationHandler<>));
 
 		// Act
 		configuration.RegisterServices(typeof(GenericNotificationHandler<MyNotification>));
@@ -72,7 +88,7 @@ public partial class MediatorConfigurationTests
 		var (configuration, _) = CreateConfiguration();
 
 		// Act && Assert
-		var ex = Assert.Throws<ArgumentException>(() => configuration.IgnoreService(typeof(GenericNotificationHandler<MyNotification>)));
+		var ex = Assert.Throws<ArgumentException>(() => configuration.IgnoreServices(typeof(GenericNotificationHandler<MyNotification>)));
 
 		Assert.Equal("type must be a generic type definition (Parameter 'type')", ex.Message);
 	}
@@ -84,7 +100,7 @@ public partial class MediatorConfigurationTests
 		var (configuration, _) = CreateConfiguration();
 
 		// Act && Assert
-		var ex = Assert.Throws<ArgumentException>(() => configuration.IgnoreService(typeof(string)));
+		var ex = Assert.Throws<ArgumentException>(() => configuration.IgnoreServices(typeof(string)));
 
 		Assert.Equal("type must be an IRequestHandler or INotificationHandler (Parameter 'type')", ex.Message);
 	}

@@ -3,6 +3,7 @@ namespace FreeMediator.Configuration;
 internal class MediatorConfiguration : IMediatorConfiguration
 {
 	private readonly HashSet<Type> _ignoredTypes = [];
+	private readonly HashSet<Predicate<Type>> _ignorePredicates = [];
 	private readonly IServiceRegistrar _services;
 
 	internal MediatorConfiguration(IServiceRegistrar services)
@@ -10,22 +11,35 @@ internal class MediatorConfiguration : IMediatorConfiguration
 		_services = services;
 	}
 
-	public IMediatorConfiguration IgnoreService(Type type)
+	#region IgnoreServices
+
+	public IMediatorConfiguration IgnoreServices(params IEnumerable<Type> types)
 	{
-		if (type is { IsGenericType: true, IsGenericTypeDefinition: false })
+		foreach (var type in types)
 		{
-			throw new ArgumentException($"{nameof(type)} must be a generic type definition", nameof(type));
-		}
+			if (type is { IsGenericType: true, IsGenericTypeDefinition: false })
+			{
+				throw new ArgumentException($"{nameof(type)} must be a generic type definition", nameof(type));
+			}
 
-		if (!type.IsAssignableTo(typeof(IBaseRequestHandler)) && !type.IsAssignableTo(typeof(IBaseNotificationHandler)))
-		{
-			throw new ArgumentException($"{nameof(type)} must be an IRequestHandler or INotificationHandler", nameof(type));
-		}
+			if (!type.IsAssignableTo(typeof(IBaseRequestHandler)) && !type.IsAssignableTo(typeof(IBaseNotificationHandler)))
+			{
+				throw new ArgumentException($"{nameof(type)} must be an IRequestHandler or INotificationHandler", nameof(type));
+			}
 
-		_ignoredTypes.Add(type);
+			_ignoredTypes.Add(type);
+		}
 
 		return this;
 	}
+
+	public IMediatorConfiguration IgnoreServices(Predicate<Type> predicate)
+	{
+		_ignorePredicates.Add(predicate);
+		return this;
+	}
+
+	#endregion
 
 	#region AddOpenBehavior
 
@@ -164,6 +178,11 @@ internal class MediatorConfiguration : IMediatorConfiguration
 				continue;
 			}
 
+			if (_ignorePredicates.Any(shouldIgnore => shouldIgnore(type)))
+			{
+				continue;
+			}
+
 			TryRegisterType(type);
 		}
 
@@ -181,6 +200,13 @@ internal class MediatorConfiguration : IMediatorConfiguration
 		return this;
 	}
 
+	public IMediatorConfiguration RegisterService<T>()
+		where T : IBaseHandler
+	{
+		TryRegisterType(typeof(T));
+		return this;
+	}
+
 	private void TryRegisterType(Type type)
 	{
 		if (type.IsAbstract || type.IsInterface)
@@ -188,7 +214,7 @@ internal class MediatorConfiguration : IMediatorConfiguration
 			return;
 		}
 
-		if (!type.IsAssignableTo(typeof(IBaseRequestHandler)) && !type.IsAssignableTo(typeof(IBaseNotificationHandler)))
+		if (!type.IsAssignableTo(typeof(IBaseHandler)))
 		{
 			return;
 		}

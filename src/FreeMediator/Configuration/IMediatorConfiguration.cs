@@ -60,18 +60,36 @@ public interface IMediatorConfiguration
 	IMediatorConfiguration RegisterServicesFromAssembly(Assembly assembly);
 
 	/// <summary>
-	///     Manually register an IRequestHandler or INotificationHandler.
+	///     Manually register  IRequestHandlers or INotificationHandlers.
 	///     Useful for registering closed versions of generic handlers that cannot be auto-registered (you'll notice them as
 	///     they throw UnmappableHandlerException)
 	/// </summary>
 	IMediatorConfiguration RegisterServices(params IEnumerable<Type> types);
 
 	/// <summary>
+	///     Manually register an IRequestHandler or INotificationHandler.
+	///     Useful for registering closed versions of generic handlers that cannot be auto-registered (you'll notice them as
+	///     they throw UnmappableHandlerException)
+	/// </summary>
+	IMediatorConfiguration RegisterService<T>() where T : IBaseHandler;
+
+	/// <summary>
+	///     Explicitly ignore IRequestHandlers or INotificationHandlers from auto registration.
+	///     Useful for dealing with partially closed generic types, like e.g. &lt;IRequestHandler&lt;MyGenericType&lt;T&gt;,
+	///     bool&gt;&gt; that cannot be auto-mapped.
+	///     Instead ignore them with this method, and do manual registration using <see cref="RegisterService&lt;T&gt;" /> or
+	///     <see cref="RegisterServices" />
+	/// </summary>
+	/// <param name="types">OPEN type description of the handler type to ignore</param>
+	IMediatorConfiguration IgnoreServices(params IEnumerable<Type> types);
+
+	/// <summary>
 	///     Explicitly ignore an IRequestHandler or INotificationHandler for auto registration.
 	///     Useful for dealing with partially closed generic types, like e.g. &lt;IRequestHandler&lt;MyGenericType&lt;T&gt;,
 	///     bool&gt;&gt; that cannot be auto-mapped.
-	///     Instead ignore them with this method, and do manual registration using <see cref="RegisterServices" />
+	///     Instead ignore them with this method, and do manual registration using <see cref="RegisterService&lt;T&gt;" /> or
+	///     <see cref="RegisterServices" />
 	/// </summary>
-	/// <param name="type">OPEN type description of the handler type to ignore</param>
-	IMediatorConfiguration IgnoreService(Type type);
+	/// <param name="predicate">predicate used to evaluate types for ignorance</param>
+	IMediatorConfiguration IgnoreServices(Predicate<Type> predicate);
 }
