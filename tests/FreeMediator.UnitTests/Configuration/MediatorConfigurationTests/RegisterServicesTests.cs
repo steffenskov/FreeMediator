@@ -187,6 +187,32 @@ public partial class MediatorConfigurationTests
 		// Assert
 		Assert.Empty(services);
 	}
+
+	[Fact]
+	public void RegisterService_RequestHandler_Registered()
+	{
+		// Arrange
+		var (configuration, services) = CreateConfiguration();
+
+		// Act
+		configuration.RegisterService<InvalidSingleArgumentGenericRequestHandler<FakeCommand>>();
+
+		// Assert
+		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(InvalidSingleArgumentGenericRequestHandler<FakeCommand>));
+	}
+
+	[Fact]
+	public void RegisterService_NotificationHandler_Registers()
+	{
+		// Arrange
+		var (configuration, services) = CreateConfiguration();
+
+		// Act
+		configuration.RegisterService<InvalidGenericNotificationHandler<FakeNotification, int>>();
+
+		// Assert
+		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(InvalidGenericNotificationHandler<FakeNotification, int>));
+	}
 }
 
 file class FakeCommand : IRequest;
