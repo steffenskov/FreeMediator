@@ -42,6 +42,8 @@ static internal class RequestHandlerWrapperGenerator
 			throw new UnmappableHandlerException($"Cannot wrap type {type.Name} as its IRequestHandler definition has no generic type arguments");
 		}
 
+		GenerateConstructor(type, tb);
+
 		var baseGenericType = type.GetGenericTypeDefinition();
 
 		var genericParams = tb.DefineGenericParameters("TRequest", "TResponse");
@@ -67,6 +69,56 @@ static internal class RequestHandlerWrapperGenerator
 		tb.SetParent(baseType);
 
 		return tb.CreateType();
+	}
+
+	private static void GenerateConstructor(Type type, TypeBuilder tb)
+	{
+		var constructor = GetConstructor(type);
+
+		var constructorArgs = constructor.GetParameters()
+			.Select(p => p.ParameterType)
+			.ToArray();
+		if (constructorArgs.Length == 0)
+		{
+			return;
+		}
+
+		var ctorBuilder = tb.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, constructorArgs);
+		var il = ctorBuilder.GetILGenerator();
+
+		// Load 'this' (arg 0)
+		il.Emit(OpCodes.Ldarg_0);
+
+		for (var i = 1; i <= constructorArgs.Length; i++)
+		{
+			if (i <= 3)
+			{
+				il.Emit(OpCodes.Ldarg, i);
+			}
+			else
+			{
+				il.Emit(OpCodes.Ldarg_S, i);
+			}
+		}
+
+		// Call base constructor
+		il.Emit(OpCodes.Call, constructor);
+
+		// Return from constructor
+		il.Emit(OpCodes.Ret);
+	}
+
+	private static ConstructorInfo GetConstructor(Type type)
+	{
+		var ctorSignatures = type.GetConstructors();
+		if (ctorSignatures.Length > 1)
+		{
+			throw new UnmappableHandlerException($"Cannot wrap type {type.Name} as it has multiple constructors.");
+		}
+
+		var ctorSignature = ctorSignatures[0];
+
+		return ctorSignature;
 	}
 
 	private static string GenerateStrippedGuid()
