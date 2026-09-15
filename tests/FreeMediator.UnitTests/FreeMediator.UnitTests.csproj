@@ -1,48 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <OutputType>Exe</OutputType>
-        <RootNamespace>FreeMediator.UnitTests</RootNamespace>
-        <TargetFramework>net9.0</TargetFramework>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-        <!--
-        To enable the Microsoft Testing Platform 'dotnet test' experience, add property:
-          <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    
-        To enable the Microsoft Testing Platform native command line experience, add property:
-          <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
-    
-        For more information on Microsoft Testing Platform support in xUnit.net, please visit:
-          https://xunit.net/docs/getting-started/v3/microsoft-testing-platform
-        -->
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
-
-    <ItemGroup>
-        <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest"/>
-    </ItemGroup>
 
     <ItemGroup>
         <Using Include="Xunit"/>
     </ItemGroup>
 
+
     <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="10.0.1">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12"/>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0"/>
-        <PackageReference Include="NSubstitute" Version="6.2.0"/>
-        <PackageReference Include="xunit" Version="2.9.3"/>
-        <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+        <PackageReference Include="NSubstitute"/>
+        <PackageReference Include="xunit.v3"/>
+        <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage"/>
     </ItemGroup>
+
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\FreeMediator\FreeMediator.csproj"/>

@@ -34,7 +34,7 @@ public class PipelineBehaviorTests
 		var notification = new NotificationWithBehavior("Hello world");
 
 		// Act
-		await _mediator.Publish(notification);
+		await _mediator.Publish(notification, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(42, notification.FirstBehaviorProperty);
@@ -48,7 +48,7 @@ public class PipelineBehaviorTests
 		var notification = new NotificationWithOpenBehavior("Hello world");
 
 		// Act
-		await _mediator.Publish(notification);
+		await _mediator.Publish(notification, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(42, notification.BehaviorProperty);
@@ -61,7 +61,7 @@ public class PipelineBehaviorTests
 		var notification = new NotificationWithPostProcessing { Message = "Hello world" };
 
 		// Act
-		await _mediator.Publish(notification);
+		await _mediator.Publish(notification, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal("Hello world", NotificationWithPostProcessingHandler.ReceivedMessage);
@@ -75,7 +75,7 @@ public class PipelineBehaviorTests
 		var request = new RequestWithBehavior("Hello world");
 
 		// Act
-		await _mediator.Send(request);
+		await _mediator.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(42, request.FirstBehaviorProperty);
@@ -89,7 +89,7 @@ public class PipelineBehaviorTests
 		var request = new RequestWithOpenBehavior("Hello world");
 
 		// Act
-		await _mediator.Send(request);
+		await _mediator.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(42, request.BehaviorProperty);
@@ -102,7 +102,7 @@ public class PipelineBehaviorTests
 		var request = new RequestWithPostProcessing { Message = "Hello world" };
 
 		// Act
-		await _mediator.Send(request);
+		await _mediator.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal("Hello world", RequestWithPostProcessingHandler.ReceivedMessage);

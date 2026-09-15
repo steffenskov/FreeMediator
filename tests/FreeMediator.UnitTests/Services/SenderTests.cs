@@ -25,7 +25,7 @@ public class SenderTests
 		var request = new EchoRequest($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		var result = await _sender.Send(request);
+		var result = await _sender.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(request.Message, result);
@@ -38,7 +38,7 @@ public class SenderTests
 		var request = new CommandRequest($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		await _sender.Send(request);
+		await _sender.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		var handledMessage = Assert.Single(CommandHandler.HandledMessages);
@@ -53,8 +53,8 @@ public class SenderTests
 		var secondCommand = new SecondMultiCommand($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		await _sender.Send(firstCommand);
-		await _sender.Send(secondCommand);
+		await _sender.Send(firstCommand, TestContext.Current.CancellationToken);
+		await _sender.Send(secondCommand, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(2, MultiCommandHandler.HandledMessages.Count);
@@ -73,8 +73,8 @@ public class SenderTests
 		var secondRequest = new SecondMultiRequestWithResponse(Random.Shared.Next());
 
 		// Act
-		var firstResult = await _sender.Send(firstRequest);
-		var secondResult = await _sender.Send(secondRequest);
+		var firstResult = await _sender.Send(firstRequest, TestContext.Current.CancellationToken);
+		var secondResult = await _sender.Send(secondRequest, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(firstRequest.Message, firstResult);
@@ -89,8 +89,8 @@ public class SenderTests
 		var request = new MixedRequest($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		await _sender.Send(command);
-		var secondResult = await _sender.Send(request);
+		await _sender.Send(command, TestContext.Current.CancellationToken);
+		var secondResult = await _sender.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		var handledCommand = Assert.Single(MixedRequestHandler.HandledMessages);
@@ -106,8 +106,8 @@ public class SenderTests
 		var stringRequest = new GenericEchoRequest<string>($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		var intResult = await _sender.Send(intRequest);
-		var stringResult = await _sender.Send(stringRequest);
+		var intResult = await _sender.Send(intRequest, TestContext.Current.CancellationToken);
+		var stringResult = await _sender.Send(stringRequest, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(intRequest.Value, intResult);
@@ -121,7 +121,7 @@ public class SenderTests
 		var request = new WrongHandlerCommand($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		await _sender.Send(request);
+		await _sender.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		var handledMessage = Assert.Single(WrongHandler.HandledMessages);
@@ -144,7 +144,7 @@ public class SenderTests
 		var request = new GenericRequest($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		var result = await sender.Send(request);
+		var result = await sender.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(request.Message, result);
@@ -166,7 +166,7 @@ public class SenderTests
 		var request = new GenericResponseRequest<string>($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		var result = await sender.Send(request);
+		var result = await sender.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(request.Message, result);
@@ -188,7 +188,7 @@ public class SenderTests
 		var request = new GenericCommand($"Hello world {Random.Shared.Next()}");
 
 		// Act
-		await sender.Send(request);
+		await sender.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(request.Message, GenericCommandHandler.HandledMessage);
@@ -208,7 +208,7 @@ public class SenderTests
 		var sender = serviceProvider.GetRequiredService<ISender>();
 
 		// Act && Assert
-		var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await sender.Send(new RequestWithMultipleHandlers("Hello world")));
+		var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await sender.Send(new RequestWithMultipleHandlers("Hello world"), TestContext.Current.CancellationToken));
 
 		Assert.StartsWith("Multiple handlers found for the same request, most likely you have a generic handler without generic constraints somewhere. The handlers are:", ex.Message);
 	}
@@ -227,7 +227,7 @@ public class SenderTests
 		var sender = serviceProvider.GetRequiredService<ISender>();
 
 		// Act && Assert
-		var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await sender.Send(new CommandWithMultipleHandlers()));
+		var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await sender.Send(new CommandWithMultipleHandlers(), TestContext.Current.CancellationToken));
 
 		Assert.StartsWith("Multiple handlers found for the same request, most likely you have a generic handler without generic constraints somewhere. The handlers are:", ex.Message);
 	}
@@ -250,7 +250,7 @@ public class SenderTests
 		var request = new GenericRequest<string?>(value);
 
 		// Act
-		var result = await sender.Send(request);
+		var result = await sender.Send(request, TestContext.Current.CancellationToken);
 
 		// Assert
 		Assert.Equal(notNull, result);

@@ -1,0 +1,17 @@
+<Project>
+    <PropertyGroup>
+        <!-- Enable central package management, https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management -->
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    </PropertyGroup>
+    <ItemGroup Label="Main">
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12"/>
+    </ItemGroup>
+    <ItemGroup Label="Tests">
+        <PackageVersion Include="NSubstitute" Version="6.2.0"/>
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1"/>
+        <PackageVersion Include="xunit.v3" Version="4.0.1"/>
+        <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2"/>
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12"/>
+    </ItemGroup>
+</Project>
