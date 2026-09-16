@@ -13,7 +13,7 @@ public class ServiceRegistrarTests
 
 		// Assert
 		var ex = Assert.Throws<ArgumentException>(() => registrar.AddDistinctImplementation(typeof(IService), typeof(ConcreteService)));
-		Assert.Equal($"{typeof(ConcreteService).Name} is already registered (Parameter 'implementationType')", ex.Message);
+		Assert.Equal($"{TypeFormatter.FormatTypeName(typeof(ConcreteService))} is already registered (Parameter 'implementationType')", ex.Message);
 	}
 
 	[Fact]
@@ -48,7 +48,7 @@ public class ServiceRegistrarTests
 		// Assert
 		// Assert
 		var ex = Assert.Throws<ArgumentException>(() => registrar.AddDistinctImplementation(typeof(IService), typeof(ConcreteService), ServiceLifetime.Singleton));
-		Assert.Equal($"{typeof(ConcreteService).Name} is already registered (Parameter 'implementationType')", ex.Message);
+		Assert.Equal($"{TypeFormatter.FormatTypeName(typeof(ConcreteService))} is already registered (Parameter 'implementationType')", ex.Message);
 	}
 
 	[Fact]
@@ -75,7 +75,8 @@ public class ServiceRegistrarTests
 
 		// Act
 		var ex = Assert.Throws<ArgumentException>(() => registrar.AddDistinctService(typeof(IService), typeof(ConcreteService)));
-		Assert.Equal($"{typeof(IService).Name} already has a registered implementation ({typeof(ConcreteService).Name}) (Parameter 'service')", ex.Message);
+		Assert.Equal($"{TypeFormatter.FormatTypeName(typeof(IService))} already has a registered implementation ({TypeFormatter.FormatTypeName(typeof(ConcreteService))}) (Parameter 'service')",
+			ex.Message);
 	}
 
 	[Fact]
@@ -89,6 +90,7 @@ public class ServiceRegistrarTests
 
 		// Act
 		var nonGenericEnumerator = ((IEnumerable)registrar).GetEnumerator();
+		using var nonGenericEnumerator1 = nonGenericEnumerator as IDisposable; // Cleanup
 
 		// Assert
 		Assert.Equal(defaultEnumerator, nonGenericEnumerator);
@@ -165,7 +167,7 @@ public class ServiceRegistrarTests
 
 		// Act && Assert
 		var ex = Assert.Throws<NotSupportedException>(() => registrar.RegisterGenericRequestHandler(typeof(ThreeGenericArgumentType<,,>)));
-		Assert.Equal($"Generic request handlers with more than 2 generic type arguments are not supported: {typeof(ThreeGenericArgumentType<,,>).Name}", ex.Message);
+		Assert.Equal($"Generic request handlers with more than 2 generic type arguments are not supported: {TypeFormatter.FormatTypeName(typeof(ThreeGenericArgumentType<,,>))}", ex.Message);
 	}
 
 	[Fact]
@@ -200,7 +202,7 @@ public class ServiceRegistrarTests
 
 		// Act && Assert
 		var ex = Assert.Throws<NotSupportedException>(() => registrar.RegisterGenericNotificationHandler(typeof(TwoGenericRequestHandler<,>)));
-		Assert.Equal($"Generic notification handlers with more than 1 generic type arguments are not supported: {typeof(TwoGenericRequestHandler<,>).Name}", ex.Message);
+		Assert.Equal($"Generic notification handlers with more than 1 generic type arguments are not supported: {TypeFormatter.FormatTypeName(typeof(TwoGenericRequestHandler<,>))}", ex.Message);
 	}
 }
 

@@ -25,7 +25,9 @@ public partial class MediatorConfigurationTests
 		// Act && Assert
 		var ex = Assert.Throws<ArgumentException>(() => configuration.AddBehavior(typeof(ClosedBehaviorWithoutInterfaceImplementation)));
 
-		Assert.Equal($"{typeof(ClosedBehaviorWithoutInterfaceImplementation).Name} must implement IPipelineBehavior<> or IPipelineBehavior<,> (Parameter 'implementationType')", ex.Message);
+		Assert.Equal(
+			$"{TypeFormatter.FormatTypeName(typeof(ClosedBehaviorWithoutInterfaceImplementation))} must implement IPipelineBehavior<> or IPipelineBehavior<,> (Parameter 'implementationType')",
+			ex.Message);
 	}
 
 	[Fact]
@@ -39,7 +41,7 @@ public partial class MediatorConfigurationTests
 
 		// Assert
 		var ex = Assert.Throws<ArgumentException>(() => configuration.AddBehavior<ClosedBehavior>());
-		Assert.Equal($"{typeof(ClosedBehavior).Name} is already registered (Parameter 'implementationType')", ex.Message);
+		Assert.Equal($"{TypeFormatter.FormatTypeName(typeof(ClosedBehavior))} is already registered (Parameter 'implementationType')", ex.Message);
 	}
 
 	[Theory]

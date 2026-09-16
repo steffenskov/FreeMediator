@@ -37,7 +37,9 @@ public partial class MediatorConfigurationTests
 		// Act && Assert
 		var ex = Assert.Throws<ArgumentException>(() => configuration.AddOpenBehavior(typeof(GenericBehaviorWithSingleArg<>)));
 
-		Assert.Equal("implementationType must take the same number of type arguments (have the same arity) as the IPipelineBehavior<> or IPipelineBehavior<,> interface implemented. (Parameter 'implementationType')", ex.Message);
+		Assert.Equal(
+			"implementationType must take the same number of type arguments (have the same arity) as the IPipelineBehavior<> or IPipelineBehavior<,> interface implemented. (Parameter 'implementationType')",
+			ex.Message);
 	}
 
 	[Fact]
@@ -49,7 +51,9 @@ public partial class MediatorConfigurationTests
 		// Act && Assert
 		var ex = Assert.Throws<ArgumentException>(() => configuration.AddOpenBehavior(typeof(GenericBehaviorWithBothInterfaceImplementations<,>)));
 
-		Assert.Equal($"{typeof(GenericBehaviorWithBothInterfaceImplementations<FakeNotificationAndRequest, Unit>).Name} can only implement either IPipelineBehavior<> or IPipelineBehavior<,> (Parameter 'implementationType')", ex.Message);
+		Assert.Equal(
+			$"{TypeFormatter.FormatTypeName(typeof(GenericBehaviorWithBothInterfaceImplementations<,>))} can only implement either IPipelineBehavior<> or IPipelineBehavior<,> (Parameter 'implementationType')",
+			ex.Message);
 	}
 
 	[Fact]
@@ -61,7 +65,9 @@ public partial class MediatorConfigurationTests
 		// Act && Assert
 		var ex = Assert.Throws<ArgumentException>(() => configuration.AddOpenBehavior(typeof(GenericBehaviorWithoutInterfaceImplementation<,>)));
 
-		Assert.Equal($"{typeof(GenericBehaviorWithoutInterfaceImplementation<FakeRequest, Unit>).Name} must implement IPipelineBehavior<> or IPipelineBehavior<,> (Parameter 'implementationType')", ex.Message);
+		Assert.Equal(
+			$"{TypeFormatter.FormatTypeName(typeof(GenericBehaviorWithoutInterfaceImplementation<,>))} must implement IPipelineBehavior<> or IPipelineBehavior<,> (Parameter 'implementationType')",
+			ex.Message);
 	}
 
 	[Fact]
@@ -75,7 +81,7 @@ public partial class MediatorConfigurationTests
 
 		// Assert
 		var ex = Assert.Throws<ArgumentException>(() => configuration.AddOpenBehavior(typeof(GenericBehavior<,>)));
-		Assert.Equal($"{typeof(GenericBehavior<,>).Name} is already registered (Parameter 'implementationType')", ex.Message);
+		Assert.Equal($"{TypeFormatter.FormatTypeName(typeof(GenericBehavior<,>))} is already registered (Parameter 'implementationType')", ex.Message);
 	}
 
 	[Theory]

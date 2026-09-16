@@ -42,7 +42,7 @@ public partial class RequestHandlerWrapperGeneratorTests
 		// Act && Assert
 		var ex = Assert.Throws<UnmappableHandlerException>(() => RequestHandlerWrapperGenerator.GenerateImplementationType(type, interfaceType));
 
-		Assert.Equal($"Cannot wrap type {type.Name} as it doesn't seem to implement IRequestHandler<,>", ex.Message);
+		Assert.Equal($"Cannot wrap type {TypeFormatter.FormatTypeName(type)} as it doesn't seem to implement IRequestHandler<,>", ex.Message);
 	}
 
 	[Fact]
@@ -55,7 +55,7 @@ public partial class RequestHandlerWrapperGeneratorTests
 		// Act && Assert
 		var ex = Assert.Throws<UnmappableHandlerException>(() => RequestHandlerWrapperGenerator.GenerateImplementationType(type, interfaceType));
 
-		Assert.Equal($"Cannot wrap type {type.Name} as its IRequestHandler definition has no generic type arguments", ex.Message);
+		Assert.Equal($"Cannot wrap type {TypeFormatter.FormatTypeName(type)} as its IRequestHandler definition has no generic type arguments", ex.Message);
 	}
 
 	[Fact]
@@ -68,7 +68,7 @@ public partial class RequestHandlerWrapperGeneratorTests
 		// Act && Assert
 		var ex = Assert.Throws<UnmappableHandlerException>(() => RequestHandlerWrapperGenerator.GenerateImplementationType(type, interfaceType));
 
-		Assert.Equal($"Cannot wrap type {type.Name} as it already has both generic type arguments", ex.Message);
+		Assert.Equal($"Cannot wrap type {TypeFormatter.FormatTypeName(type)} as it already has both generic type arguments", ex.Message);
 	}
 
 	[Fact]
@@ -115,7 +115,7 @@ public partial class RequestHandlerWrapperGeneratorTests
 		// Act && Assert
 		var ex = Assert.Throws<UnmappableHandlerException>(() => RequestHandlerWrapperGenerator.GenerateImplementationType(type, interfaceType));
 
-		Assert.Equal($"Cannot wrap type {type.Name} as it has multiple constructors.", ex.Message);
+		Assert.Equal($"Cannot wrap type {TypeFormatter.FormatTypeName(type)} as it has multiple constructors.", ex.Message);
 	}
 }
 
