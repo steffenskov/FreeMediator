@@ -96,7 +96,7 @@ public partial class MediatorConfigurationTests
 
 		// Assert
 		var ex = Assert.Throws<ArgumentException>(() => configuration.RegisterServices(handlerType));
-		Assert.Equal($"{handlerType.Name} is already registered (Parameter 'implementationType')", ex.Message);
+		Assert.Equal($"{TypeFormatter.FormatTypeName(handlerType)} is already registered (Parameter 'implementationType')", ex.Message);
 	}
 
 	[Fact]
@@ -110,7 +110,9 @@ public partial class MediatorConfigurationTests
 
 		// Assert
 		var ex = Assert.Throws<ArgumentException>(() => configuration.RegisterServices(typeof(FakeCommandHandler2)));
-		Assert.Equal($"{typeof(IRequestHandler<FakeCommand>).Name} already has a registered implementation ({typeof(FakeCommandHandler).Name}) (Parameter 'service')", ex.Message);
+		Assert.Equal(
+			$"{TypeFormatter.FormatTypeName(typeof(IRequestHandler<FakeCommand>))} already has a registered implementation ({TypeFormatter.FormatTypeName(typeof(FakeCommandHandler))}) (Parameter 'service')",
+			ex.Message);
 	}
 
 	[Fact]
@@ -124,7 +126,9 @@ public partial class MediatorConfigurationTests
 
 		// Assert
 		var ex = Assert.Throws<ArgumentException>(() => configuration.RegisterServices(typeof(FakeRequestHandler2)));
-		Assert.Equal($"{typeof(IRequestHandler<FakeRequest, string>).Name} already has a registered implementation ({typeof(FakeRequestHandler).Name}) (Parameter 'service')", ex.Message);
+		Assert.Equal(
+			$"{TypeFormatter.FormatTypeName(typeof(IRequestHandler<FakeRequest, string>))} already has a registered implementation ({TypeFormatter.FormatTypeName(typeof(FakeRequestHandler))}) (Parameter 'service')",
+			ex.Message);
 	}
 
 	[Fact]
@@ -148,7 +152,8 @@ public partial class MediatorConfigurationTests
 
 		// Act && Assert
 		var ex = Assert.Throws<NotSupportedException>(() => configuration.RegisterServices(typeof(InvalidTripleArgumentGenericRequestHandler<,,>)));
-		Assert.Equal($"Generic request handlers with more than 2 generic type arguments are not supported: {typeof(InvalidTripleArgumentGenericRequestHandler<,,>).Name}", ex.Message);
+		Assert.Equal($"Generic request handlers with more than 2 generic type arguments are not supported: {TypeFormatter.FormatTypeName(typeof(InvalidTripleArgumentGenericRequestHandler<,,>))}",
+			ex.Message);
 	}
 
 	[Fact]
@@ -159,7 +164,8 @@ public partial class MediatorConfigurationTests
 
 		// Act && Assert
 		var ex = Assert.Throws<NotSupportedException>(() => configuration.RegisterServices(typeof(InvalidGenericNotificationHandler<,>)));
-		Assert.Equal($"Generic notification handlers with more than 1 generic type arguments are not supported: {typeof(InvalidGenericNotificationHandler<,>).Name}", ex.Message);
+		Assert.Equal($"Generic notification handlers with more than 1 generic type arguments are not supported: {TypeFormatter.FormatTypeName(typeof(InvalidGenericNotificationHandler<,>))}",
+			ex.Message);
 	}
 
 	[Fact]

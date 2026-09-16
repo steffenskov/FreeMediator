@@ -195,6 +195,22 @@ public class SenderTests
 	}
 
 	[Fact]
+	public async Task Send_RequestWithNoHandler_Throws()
+	{
+		// Arrange
+		var services = new ServiceCollection();
+		services.AddMediator(_ => { });
+
+		var serviceProvider = services.BuildServiceProvider();
+		var sender = serviceProvider.GetRequiredService<ISender>();
+
+		// Act && Assert
+		var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await sender.Send(new GenericRequest("Hello world"), TestContext.Current.CancellationToken));
+
+		Assert.Equal("No handler found of type FreeMediator.IRequestHandler<FreeMediator.UnitTests.Services.GenericRequest, System.String>", ex.Message);
+	}
+
+	[Fact]
 	public async Task Send_RequestWithMultipleHandlers_Throws()
 	{
 		// Arrange

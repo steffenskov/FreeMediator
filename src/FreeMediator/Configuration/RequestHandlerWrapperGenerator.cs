@@ -26,7 +26,7 @@ static internal class RequestHandlerWrapperGenerator
 		var genericInterfaceArguments = genericInterfaceType.GetGenericArguments();
 		if (genericInterfaceArguments.Length != 2)
 		{
-			throw new UnmappableHandlerException($"Cannot wrap type {type.Name} as it doesn't seem to implement IRequestHandler<,>");
+			throw new UnmappableHandlerException($"Cannot wrap type {TypeFormatter.FormatTypeName(type)} as it doesn't seem to implement IRequestHandler<,>");
 		}
 
 		var isGenericRequest = genericInterfaceArguments[0].IsGenericParameter;
@@ -34,12 +34,12 @@ static internal class RequestHandlerWrapperGenerator
 
 		if (isGenericRequest && isGenericResponse)
 		{
-			throw new UnmappableHandlerException($"Cannot wrap type {type.Name} as it already has both generic type arguments");
+			throw new UnmappableHandlerException($"Cannot wrap type {TypeFormatter.FormatTypeName(type)} as it already has both generic type arguments");
 		}
 
 		if (!isGenericRequest && !isGenericResponse)
 		{
-			throw new UnmappableHandlerException($"Cannot wrap type {type.Name} as its IRequestHandler definition has no generic type arguments");
+			throw new UnmappableHandlerException($"Cannot wrap type {TypeFormatter.FormatTypeName(type)} as its IRequestHandler definition has no generic type arguments");
 		}
 
 		GenerateConstructor(type, tb);
@@ -113,7 +113,7 @@ static internal class RequestHandlerWrapperGenerator
 		var ctorSignatures = type.GetConstructors();
 		if (ctorSignatures.Length > 1)
 		{
-			throw new UnmappableHandlerException($"Cannot wrap type {type.Name} as it has multiple constructors.");
+			throw new UnmappableHandlerException($"Cannot wrap type {TypeFormatter.FormatTypeName(type)} as it has multiple constructors.");
 		}
 
 		var ctorSignature = ctorSignatures[0];

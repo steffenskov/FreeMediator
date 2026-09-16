@@ -2,8 +2,8 @@ namespace FreeMediator.Configuration;
 
 internal class MediatorConfiguration : IMediatorConfiguration
 {
-	private readonly HashSet<Type> _ignoredTypes = [];
 	private readonly HashSet<Predicate<Type>> _ignorePredicates = [];
+	private readonly HashSet<Type> _ignoredTypes = [];
 	private readonly IServiceRegistrar _services;
 
 	internal MediatorConfiguration(IServiceRegistrar services)
@@ -63,12 +63,12 @@ internal class MediatorConfiguration : IMediatorConfiguration
 
 		if (implementedInterfaces.Count == 0)
 		{
-			throw new ArgumentException($"{implementationType.Name} must implement IPipelineBehavior<> or IPipelineBehavior<,>", nameof(implementationType));
+			throw new ArgumentException($"{TypeFormatter.FormatTypeName(implementationType)} must implement IPipelineBehavior<> or IPipelineBehavior<,>", nameof(implementationType));
 		}
 
 		if (implementedInterfaces.Count > 1)
 		{
-			throw new ArgumentException($"{implementationType.Name} can only implement either IPipelineBehavior<> or IPipelineBehavior<,>", nameof(implementationType));
+			throw new ArgumentException($"{TypeFormatter.FormatTypeName(implementationType)} can only implement either IPipelineBehavior<> or IPipelineBehavior<,>", nameof(implementationType));
 		}
 
 		var implementedInterface = implementedInterfaces.Single();
@@ -133,7 +133,7 @@ internal class MediatorConfiguration : IMediatorConfiguration
 
 		if (implementedInterfaces.Count == 0)
 		{
-			throw new ArgumentException($"{implementationType.Name} must implement IPipelineBehavior<> or IPipelineBehavior<,>", nameof(implementationType));
+			throw new ArgumentException($"{TypeFormatter.FormatTypeName(implementationType)} must implement IPipelineBehavior<> or IPipelineBehavior<,>", nameof(implementationType));
 		}
 
 		foreach (var implementedInterface in implementedInterfaces)

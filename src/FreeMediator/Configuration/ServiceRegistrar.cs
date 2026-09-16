@@ -17,7 +17,7 @@ internal class ServiceRegistrar : IServiceRegistrar
 		                                          && registeredDescriptor.ImplementationType == descriptor.ImplementationType
 		                                          && Equals(registeredDescriptor.ServiceKey, descriptor.ServiceKey)))
 		{
-			throw new ArgumentException($"{implementationType.Name} is already registered", nameof(implementationType));
+			throw new ArgumentException($"{TypeFormatter.FormatTypeName(implementationType)} is already registered", nameof(implementationType));
 		}
 
 		_services.Add(descriptor);
@@ -32,7 +32,8 @@ internal class ServiceRegistrar : IServiceRegistrar
 
 		if (existingRegistration is not null)
 		{
-			throw new ArgumentException($"{service.Name} already has a registered implementation ({existingRegistration.ImplementationType?.Name})", nameof(service));
+			throw new ArgumentException($"{TypeFormatter.FormatTypeName(service)} already has a registered implementation ({TypeFormatter.FormatTypeName(existingRegistration.ImplementationType)})",
+				nameof(service));
 		}
 
 		_services.Add(descriptor);
@@ -43,7 +44,7 @@ internal class ServiceRegistrar : IServiceRegistrar
 		var genericArgumentTypeCount = type.GetGenericArguments().Length;
 		switch (genericArgumentTypeCount)
 		{
-			case 0: throw new UnreachableException($"Generic type must have at least one argument: {type.Name}");
+			case 0: throw new UnreachableException($"Generic type must have at least one argument: {TypeFormatter.FormatTypeName(type)}");
 			case 1:
 				var genericInterfaceType = type.GetRequestHandlerInterface();
 
@@ -69,7 +70,7 @@ internal class ServiceRegistrar : IServiceRegistrar
 			case 2:
 				AddDistinctImplementation(typeof(IRequestHandler<,>), type);
 				break;
-			default: throw new NotSupportedException($"Generic request handlers with more than 2 generic type arguments are not supported: {type.Name}");
+			default: throw new NotSupportedException($"Generic request handlers with more than 2 generic type arguments are not supported: {TypeFormatter.FormatTypeName(type)}");
 		}
 	}
 
@@ -78,11 +79,11 @@ internal class ServiceRegistrar : IServiceRegistrar
 		var genericArgumentTypeCount = type.GetGenericArguments().Length;
 		switch (genericArgumentTypeCount)
 		{
-			case 0: throw new UnreachableException($"Generic type must have at least one argument: {type.Name}");
+			case 0: throw new UnreachableException($"Generic type must have at least one argument: {TypeFormatter.FormatTypeName(type)}");
 			case 1:
 				AddDistinctImplementation(typeof(INotificationHandler<>), type);
 				break;
-			default: throw new NotSupportedException($"Generic notification handlers with more than 1 generic type arguments are not supported: {type.Name}");
+			default: throw new NotSupportedException($"Generic notification handlers with more than 1 generic type arguments are not supported: {TypeFormatter.FormatTypeName(type)}");
 		}
 	}
 

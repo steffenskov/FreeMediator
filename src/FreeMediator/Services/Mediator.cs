@@ -118,12 +118,13 @@ public class Mediator : IMediator
 	{
 		if (services.Count == 0)
 		{
-			throw new InvalidOperationException($"No handler found of type {typeof(T).Name}");
+			var interfaceTypeName = TypeFormatter.FormatTypeName(typeof(T));
+			throw new InvalidOperationException($"No handler found of type {interfaceTypeName}");
 		}
 
 		if (services.Count > 1)
 		{
-			var serviceNames = string.Join(Environment.NewLine, services.Select(service => service!.GetType().FullName));
+			var serviceNames = string.Join(Environment.NewLine, services.Select(service => TypeFormatter.FormatTypeName(service!.GetType())));
 			throw new InvalidOperationException(
 				$"Multiple handlers found for the same request, most likely you have a generic handler without generic constraints somewhere. The handlers are:{Environment.NewLine}{serviceNames}");
 		}
@@ -131,16 +132,17 @@ public class Mediator : IMediator
 		return services[0];
 	}
 
+
 	private static object? GetSingle(IList<object?> services, Type type)
 	{
 		if (services.Count == 0)
 		{
-			throw new InvalidOperationException($"No handler found of type {type.Name}");
+			throw new InvalidOperationException($"No handler found of type {TypeFormatter.FormatTypeName(type)}");
 		}
 
 		if (services.Count > 1)
 		{
-			var serviceNames = string.Join(Environment.NewLine, services.Select(service => service!.GetType().FullName));
+			var serviceNames = string.Join(Environment.NewLine, services.Select(service => TypeFormatter.FormatTypeName(service!.GetType())));
 			throw new InvalidOperationException(
 				$"Multiple handlers found for the same request, most likely you have a generic handler without generic constraints somewhere. The handlers are:{Environment.NewLine}{serviceNames}");
 		}
@@ -157,7 +159,7 @@ public class Mediator : IMediator
 
 		if (services.Count > 1)
 		{
-			var serviceNames = string.Join(Environment.NewLine, services.Select(service => service!.GetType().FullName));
+			var serviceNames = string.Join(Environment.NewLine, services.Select(service => TypeFormatter.FormatTypeName(service!.GetType())));
 			throw new InvalidOperationException(
 				$"Multiple handlers found for the same request, most likely you have a generic handler without generic constraints somewhere. The handlers are:{Environment.NewLine}{serviceNames}");
 		}
