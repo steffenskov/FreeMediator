@@ -10,5 +10,6 @@ public static class Setup
 
 		var configuration = new MediatorConfiguration(new ServiceRegistrar(services));
 		configure(configuration);
+		configuration.ExecuteAssemblyBasedRegistration();
 	}
 }

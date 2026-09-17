@@ -20,8 +20,10 @@ public class PipelineBehaviorTests
 			config.AddBehavior<RequestWithPostProcessingBehavior>();
 		});
 
-		var config = new MediatorConfiguration(new ForgivingServiceRegistrar(services));
+		var config = new MediatorConfiguration(
+			new ForgivingServiceRegistrar(services)); // HACK: By doing a separate configuration on top of the same service collection, we can use a ForgivingServiceRegistrar for specific tests 
 		config.RegisterServicesFromAssemblyContaining<PipelineBehaviorTests>();
+		config.ExecuteAssemblyBasedRegistration();
 
 		var serviceProvider = services.BuildServiceProvider();
 		_mediator = serviceProvider.GetRequiredService<IMediator>();

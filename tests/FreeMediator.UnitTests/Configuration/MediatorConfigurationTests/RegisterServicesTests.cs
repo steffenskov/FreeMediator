@@ -10,9 +10,10 @@ public partial class MediatorConfigurationTests
 	{
 		// Arrange
 		var (configuration, services) = CreateConfiguration(true);
+		configuration.RegisterServicesFromAssemblyContaining<FakeCommand>();
 
 		// Act
-		configuration.RegisterServicesFromAssemblyContaining<FakeCommand>();
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeCommandHandler));
@@ -23,9 +24,10 @@ public partial class MediatorConfigurationTests
 	{
 		// Arrange
 		var (configuration, services) = CreateConfiguration(true);
+		configuration.RegisterServicesFromAssemblyContaining(typeof(FakeCommand));
 
 		// Act
-		configuration.RegisterServicesFromAssemblyContaining(typeof(FakeCommand));
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeCommandHandler));
@@ -37,9 +39,10 @@ public partial class MediatorConfigurationTests
 		// Arrange
 		var (configuration, services) = CreateConfiguration(true);
 		var assembly = typeof(FakeCommand).Assembly;
+		configuration.RegisterServicesFromAssemblies(assembly);
 
 		// Act
-		configuration.RegisterServicesFromAssemblies(assembly);
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeCommandHandler));
@@ -51,12 +54,26 @@ public partial class MediatorConfigurationTests
 		// Arrange
 		var (configuration, services) = CreateConfiguration(true);
 		var assembly = typeof(FakeCommand).Assembly;
+		configuration.RegisterServicesFromAssembly(assembly);
 
 		// Act
-		configuration.RegisterServicesFromAssembly(assembly);
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeCommandHandler));
+	}
+
+	[Fact]
+	public void RegisterServicesFromAssembly_InvokedAfterScan_Throws()
+	{
+		// Arrange
+		var (configuration, services) = CreateConfiguration(true);
+		configuration.ExecuteAssemblyBasedRegistration();
+		var assembly = typeof(FakeCommand).Assembly;
+
+		// Act && Assert
+		var ex = Assert.Throws<UnreachableException>(() => configuration.RegisterServicesFromAssembly(assembly));
+		Assert.Equal("Assemblies very already scanned for types, this should never happen. Please report an issue on https://github.com/steffenskov/FreeMediator/issues", ex.Message);
 	}
 
 	[Fact]
@@ -64,9 +81,10 @@ public partial class MediatorConfigurationTests
 	{
 		// Arrange
 		var (configuration, services) = CreateConfiguration(true);
+		configuration.RegisterServicesFromAssemblyContaining<FakeCommand>();
 
 		// Act
-		configuration.RegisterServicesFromAssemblyContaining<FakeCommand>();
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeCommandHandler));
@@ -81,7 +99,11 @@ public partial class MediatorConfigurationTests
 		var (configuration, _) = CreateConfiguration();
 
 		// Act && Assert
-		Assert.Throws<UnmappableHandlerException>(() => configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>());
+		Assert.Throws<UnmappableHandlerException>(() =>
+		{
+			configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>();
+			configuration.ExecuteAssemblyBasedRegistration();
+		});
 	}
 
 	[Fact]
@@ -218,6 +240,20 @@ public partial class MediatorConfigurationTests
 
 		// Assert
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(InvalidGenericNotificationHandler<FakeNotification, int>));
+	}
+
+	[Fact]
+	public void ExecuteAssemblyBasedRegistration_InvokedTwice_Throws()
+	{
+		// Arrange
+		var (configuration, services) = CreateConfiguration();
+
+		// Act
+		configuration.ExecuteAssemblyBasedRegistration();
+
+		// Assert
+		var ex = Assert.Throws<UnreachableException>(() => configuration.ExecuteAssemblyBasedRegistration());
+		Assert.Equal("Multiple attempts at scanning assemblies detected, this should never happen. Please report an issue on https://github.com/steffenskov/FreeMediator/issues", ex.Message);
 	}
 }
 

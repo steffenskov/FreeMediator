@@ -9,8 +9,10 @@ public class PublisherTests
 		var services = new ServiceCollection();
 		services.AddMediator(config => { });
 
-		var config = new MediatorConfiguration(new ForgivingServiceRegistrar(services));
+		var config = new MediatorConfiguration(
+			new ForgivingServiceRegistrar(services)); // HACK: By doing a separate configuration on top of the same service collection, we can use a ForgivingServiceRegistrar for specific tests
 		config.RegisterServicesFromAssemblyContaining<PublisherTests>();
+		config.ExecuteAssemblyBasedRegistration();
 
 		var serviceProvider = services.BuildServiceProvider();
 		_publisher = serviceProvider.GetRequiredService<IPublisher>();
