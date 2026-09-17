@@ -64,6 +64,19 @@ public partial class MediatorConfigurationTests
 	}
 
 	[Fact]
+	public void RegisterServicesFromAssembly_InvokedAfterScan_Throws()
+	{
+		// Arrange
+		var (configuration, services) = CreateConfiguration(true);
+		configuration.ExecuteAssemblyBasedRegistration();
+		var assembly = typeof(FakeCommand).Assembly;
+
+		// Act && Assert
+		var ex = Assert.Throws<UnreachableException>(() => configuration.RegisterServicesFromAssembly(assembly));
+		Assert.Equal("Assemblies very already scanned for types, this should never happen. Please report an issue on https://github.com/steffenskov/FreeMediator/issues", ex.Message);
+	}
+
+	[Fact]
 	public void RegisterServicesFromAssemblyContaining_ContainsBothRequestAndNotificationHandlers_RegistersThemAll()
 	{
 		// Arrange
@@ -227,6 +240,20 @@ public partial class MediatorConfigurationTests
 
 		// Assert
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(InvalidGenericNotificationHandler<FakeNotification, int>));
+	}
+
+	[Fact]
+	public void ExecuteAssemblyBasedRegistration_InvokedTwice_Throws()
+	{
+		// Arrange
+		var (configuration, services) = CreateConfiguration();
+
+		// Act
+		configuration.ExecuteAssemblyBasedRegistration();
+
+		// Assert
+		var ex = Assert.Throws<UnreachableException>(() => configuration.ExecuteAssemblyBasedRegistration());
+		Assert.Equal("Multiple attempts at scanning assemblies detected, this should never happen. Please report an issue on https://github.com/steffenskov/FreeMediator/issues", ex.Message);
 	}
 }
 

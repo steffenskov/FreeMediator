@@ -5,7 +5,9 @@ internal class MediatorConfiguration : IMediatorConfiguration
 	private readonly HashSet<Assembly> _assembliesToScan = [];
 	private readonly HashSet<Predicate<Type>> _ignorePredicates = [];
 	private readonly HashSet<Type> _ignoredTypes = [];
+	private readonly Lock _scanLock = new();
 	private readonly IServiceRegistrar _services;
+	private bool _scannedAssemblies;
 
 	internal MediatorConfiguration(IServiceRegistrar services)
 	{
@@ -16,19 +18,22 @@ internal class MediatorConfiguration : IMediatorConfiguration
 
 	public IMediatorConfiguration IgnoreServices(params IEnumerable<Type> types)
 	{
-		foreach (var type in types)
+		lock (_scanLock)
 		{
-			if (type is { IsGenericType: true, IsGenericTypeDefinition: false })
+			foreach (var type in types)
 			{
-				throw new ArgumentException($"{nameof(type)} must be a generic type definition", nameof(type));
-			}
+				if (type is { IsGenericType: true, IsGenericTypeDefinition: false })
+				{
+					throw new ArgumentException($"{nameof(type)} must be a generic type definition", nameof(type));
+				}
 
-			if (!type.IsAssignableTo(typeof(IBaseRequestHandler)) && !type.IsAssignableTo(typeof(IBaseNotificationHandler)))
-			{
-				throw new ArgumentException($"{nameof(type)} must be an IRequestHandler or INotificationHandler", nameof(type));
-			}
+				if (!type.IsAssignableTo(typeof(IBaseRequestHandler)) && !type.IsAssignableTo(typeof(IBaseNotificationHandler)))
+				{
+					throw new ArgumentException($"{nameof(type)} must be an IRequestHandler or INotificationHandler", nameof(type));
+				}
 
-			_ignoredTypes.Add(type);
+				_ignoredTypes.Add(type);
+			}
 		}
 
 		return this;
@@ -36,7 +41,11 @@ internal class MediatorConfiguration : IMediatorConfiguration
 
 	public IMediatorConfiguration IgnoreServices(Predicate<Type> predicate)
 	{
-		_ignorePredicates.Add(predicate);
+		lock (_scanLock)
+		{
+			_ignorePredicates.Add(predicate);
+		}
+
 		return this;
 	}
 
@@ -171,7 +180,17 @@ internal class MediatorConfiguration : IMediatorConfiguration
 
 	public IMediatorConfiguration RegisterServicesFromAssembly(Assembly assembly)
 	{
-		_assembliesToScan.Add(assembly);
+		lock (_scanLock)
+		{
+			if (_scannedAssemblies)
+			{
+				throw new UnreachableException(
+					"Assemblies very already scanned for types, this should never happen. Please report an issue on https://github.com/steffenskov/FreeMediator/issues");
+			}
+
+			_assembliesToScan.Add(assembly);
+		}
+
 		return this;
 	}
 
@@ -181,22 +200,31 @@ internal class MediatorConfiguration : IMediatorConfiguration
 	/// </summary>
 	internal void ExecuteAssemblyBasedRegistration()
 	{
-		foreach (var type in _assembliesToScan.SelectMany(assembly => assembly.GetTypes()))
+		lock (_scanLock)
 		{
-			if (_ignoredTypes.Contains(type))
+			if (_scannedAssemblies)
 			{
-				continue;
+				throw new UnreachableException(
+					"Multiple attempts at scanning assemblies detected, this should never happen. Please report an issue on https://github.com/steffenskov/FreeMediator/issues");
 			}
 
-			if (_ignorePredicates.Any(shouldIgnore => shouldIgnore(type)))
+			_scannedAssemblies = true;
+			foreach (var type in _assembliesToScan.SelectMany(assembly => assembly.GetTypes()))
 			{
-				continue;
-			}
+				if (_ignoredTypes.Contains(type))
+				{
+					continue;
+				}
 
-			TryRegisterType(type);
+				if (_ignorePredicates.Any(shouldIgnore => shouldIgnore(type)))
+				{
+					continue;
+				}
+
+				TryRegisterType(type);
+			}
 		}
 	}
-
 
 	public IMediatorConfiguration RegisterServices(params IEnumerable<Type> types)
 	{
