@@ -11,7 +11,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Overloads for registrations that scans assemblies (e.g. `RegisterServicesFromAssemblyContaining`) are now evaluated lazily, meaning the ordering of those calls and `IgnoreServices` no longer matter. Previously you had to ignore any
   relevant services before doing registration.
 
-~~~~
 ## [1.4.1] - 2026-09-16
 
 ### Added
