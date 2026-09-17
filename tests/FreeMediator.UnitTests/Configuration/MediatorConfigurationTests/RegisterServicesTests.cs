@@ -10,9 +10,10 @@ public partial class MediatorConfigurationTests
 	{
 		// Arrange
 		var (configuration, services) = CreateConfiguration(true);
+		configuration.RegisterServicesFromAssemblyContaining<FakeCommand>();
 
 		// Act
-		configuration.RegisterServicesFromAssemblyContaining<FakeCommand>();
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeCommandHandler));
@@ -23,9 +24,10 @@ public partial class MediatorConfigurationTests
 	{
 		// Arrange
 		var (configuration, services) = CreateConfiguration(true);
+		configuration.RegisterServicesFromAssemblyContaining(typeof(FakeCommand));
 
 		// Act
-		configuration.RegisterServicesFromAssemblyContaining(typeof(FakeCommand));
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeCommandHandler));
@@ -37,9 +39,10 @@ public partial class MediatorConfigurationTests
 		// Arrange
 		var (configuration, services) = CreateConfiguration(true);
 		var assembly = typeof(FakeCommand).Assembly;
+		configuration.RegisterServicesFromAssemblies(assembly);
 
 		// Act
-		configuration.RegisterServicesFromAssemblies(assembly);
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeCommandHandler));
@@ -51,9 +54,10 @@ public partial class MediatorConfigurationTests
 		// Arrange
 		var (configuration, services) = CreateConfiguration(true);
 		var assembly = typeof(FakeCommand).Assembly;
+		configuration.RegisterServicesFromAssembly(assembly);
 
 		// Act
-		configuration.RegisterServicesFromAssembly(assembly);
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeCommandHandler));
@@ -64,9 +68,10 @@ public partial class MediatorConfigurationTests
 	{
 		// Arrange
 		var (configuration, services) = CreateConfiguration(true);
+		configuration.RegisterServicesFromAssemblyContaining<FakeCommand>();
 
 		// Act
-		configuration.RegisterServicesFromAssemblyContaining<FakeCommand>();
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.Single(services, descriptor => descriptor.ImplementationType == typeof(FakeCommandHandler));
@@ -81,7 +86,11 @@ public partial class MediatorConfigurationTests
 		var (configuration, _) = CreateConfiguration();
 
 		// Act && Assert
-		Assert.Throws<UnmappableHandlerException>(() => configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>());
+		Assert.Throws<UnmappableHandlerException>(() =>
+		{
+			configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>();
+			configuration.ExecuteAssemblyBasedRegistration();
+		});
 	}
 
 	[Fact]

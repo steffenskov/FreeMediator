@@ -11,9 +11,25 @@ public partial class MediatorConfigurationTests
 		var (configuration, services) = CreateConfiguration();
 
 		configuration.IgnoreServices(typeof(NestedGenericHandler<>));
+		configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>();
 
 		// Act
+		configuration.ExecuteAssemblyBasedRegistration();
+
+		// Assert
+		Assert.DoesNotContain(services, service => service.ImplementationType == typeof(NestedGenericHandler<>));
+	}
+
+	[Fact]
+	public void RegisterServicesFromAssemblyContaining_IgnoredRequestHandlerAfterRegisterCall_NotRegistered()
+	{
+		// Arrange
+		var (configuration, services) = CreateConfiguration();
 		configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>();
+		configuration.IgnoreServices(typeof(NestedGenericHandler<>));
+
+		// Act
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.DoesNotContain(services, service => service.ImplementationType == typeof(NestedGenericHandler<>));
@@ -27,9 +43,27 @@ public partial class MediatorConfigurationTests
 
 		configuration.IgnoreServices(typeof(NestedGenericHandler<>)); // Must also be ignored to avoid exceptions
 		configuration.IgnoreServices(typeof(GenericNotificationHandler<>));
+		configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>();
 
 		// Act
+		configuration.ExecuteAssemblyBasedRegistration();
+
+		// Assert
+		Assert.DoesNotContain(services, service => service.ImplementationType == typeof(GenericNotificationHandler<>));
+	}
+
+	[Fact]
+	public void RegisterServicesFromAssemblyContaining_IgnoredNotificationHandlerAfterRegisterCall_NotRegistered()
+	{
+		// Arrange
+		var (configuration, services) = CreateConfiguration();
+
 		configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>();
+		configuration.IgnoreServices(typeof(NestedGenericHandler<>)); // Must also be ignored to avoid exceptions
+		configuration.IgnoreServices(typeof(GenericNotificationHandler<>));
+
+		// Act
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.DoesNotContain(services, service => service.ImplementationType == typeof(GenericNotificationHandler<>));
@@ -42,9 +76,10 @@ public partial class MediatorConfigurationTests
 		var (configuration, services) = CreateConfiguration();
 
 		configuration.IgnoreServices(type => type.IsGenericType);
+		configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>();
 
 		// Act
-		configuration.RegisterServicesFromAssemblyContaining<IMediatorHookup>();
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.DoesNotContain(services, service => service.ImplementationType == typeof(NestedGenericHandler<>));
@@ -58,9 +93,10 @@ public partial class MediatorConfigurationTests
 		var (configuration, services) = CreateConfiguration();
 
 		configuration.IgnoreServices(typeof(NestedGenericHandler<>));
+		configuration.RegisterServices(typeof(NestedGenericHandler<string>));
 
 		// Act
-		configuration.RegisterServices(typeof(NestedGenericHandler<string>));
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.Contains(services, service => service.ImplementationType == typeof(NestedGenericHandler<string>));
@@ -73,9 +109,10 @@ public partial class MediatorConfigurationTests
 		var (configuration, services) = CreateConfiguration();
 
 		configuration.IgnoreServices(typeof(GenericNotificationHandler<>));
+		configuration.RegisterServices(typeof(GenericNotificationHandler<MyNotification>));
 
 		// Act
-		configuration.RegisterServices(typeof(GenericNotificationHandler<MyNotification>));
+		configuration.ExecuteAssemblyBasedRegistration();
 
 		// Assert
 		Assert.Contains(services, service => service.ImplementationType == typeof(GenericNotificationHandler<MyNotification>));

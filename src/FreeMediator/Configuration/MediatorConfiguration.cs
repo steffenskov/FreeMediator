@@ -2,6 +2,7 @@ namespace FreeMediator.Configuration;
 
 internal class MediatorConfiguration : IMediatorConfiguration
 {
+	private readonly HashSet<Assembly> _assembliesToScan = [];
 	private readonly HashSet<Predicate<Type>> _ignorePredicates = [];
 	private readonly HashSet<Type> _ignoredTypes = [];
 	private readonly IServiceRegistrar _services;
@@ -170,8 +171,17 @@ internal class MediatorConfiguration : IMediatorConfiguration
 
 	public IMediatorConfiguration RegisterServicesFromAssembly(Assembly assembly)
 	{
-		var types = assembly.GetTypes();
-		foreach (var type in types)
+		_assembliesToScan.Add(assembly);
+		return this;
+	}
+
+	/// <summary>
+	///     Performs the actual scanning of assemblies marked for registration, used to perform lazy registration and only
+	///     invoked internally or through specific tests.
+	/// </summary>
+	internal void ExecuteAssemblyBasedRegistration()
+	{
+		foreach (var type in _assembliesToScan.SelectMany(assembly => assembly.GetTypes()))
 		{
 			if (_ignoredTypes.Contains(type))
 			{
@@ -185,8 +195,6 @@ internal class MediatorConfiguration : IMediatorConfiguration
 
 			TryRegisterType(type);
 		}
-
-		return this;
 	}
 
 
